@@ -74,5 +74,3 @@ func (s *SceneManager) GoToScene(scene Scene) {
 		s.transitionCount = transitionMaxCount
 	}
 }
-
-type Input struct{}
