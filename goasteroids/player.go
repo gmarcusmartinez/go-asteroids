@@ -1,4 +1,4 @@
-package main
+package goasteroids
 
 import (
 	"go-asteroids/assets"
