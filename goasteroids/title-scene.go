@@ -9,10 +9,13 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
-type TitleScene struct{}
+type TitleScene struct {
+	meteors     map[int]*Meteor
+	meteorCount int
+}
 
 func (t *TitleScene) Draw(screen *ebiten.Image) {
-	textToDraw := "1 coin 1 play"
+	textToDraw := "Wellcome to Hell"
 
 	op := &text.DrawOptions{
 		LayoutOptions: text.LayoutOptions{
@@ -28,6 +31,10 @@ func (t *TitleScene) Draw(screen *ebiten.Image) {
 		Size:   48,
 	}, op)
 
+	for _, m := range t.meteors {
+		m.Draw(screen)
+	}
+
 }
 
 func (t *TitleScene) Update(state *State) error {
@@ -35,5 +42,16 @@ func (t *TitleScene) Update(state *State) error {
 		state.SceneManager.GoToScene(NewGameScence())
 		return nil
 	}
+
+	/* add some meteors */
+	if len(t.meteors) < 10 {
+		m := NewMeteor(0.25, &GameScene{}, len(t.meteors)-1)
+		t.meteorCount++
+		t.meteors[t.meteorCount] = m
+	}
+	for _, m := range t.meteors {
+		m.Update()
+	}
+
 	return nil
 }
