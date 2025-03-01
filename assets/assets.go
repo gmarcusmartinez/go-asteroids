@@ -1,20 +1,20 @@
 package assets
 
 import (
+	"bytes"
 	"embed"
 	"image"
 	_ "image/png"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"golang.org/x/image/font"
-	"golang.org/x/image/font/opentype"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
 //go:embed *
 var assets embed.FS
 
 var PlayerSprite = mustLoadImage("images/player.png")
-var TitleFont = titleFont("fonts/title.ttf")
+var TitleFont = mustLoadFontFace("fonts/title.ttf")
 
 func mustLoadImage(name string) *ebiten.Image {
 	f, err := assets.Open(name)
@@ -32,28 +32,18 @@ func mustLoadImage(name string) *ebiten.Image {
 	return ebiten.NewImageFromImage(img)
 }
 
-func titleFont(name string) font.Face {
+func mustLoadFontFace(name string) *text.GoTextFaceSource {
 	f, err := assets.ReadFile(name)
 	if err != nil {
 		panic(err)
 	}
 
-	tt, err := opentype.Parse(f)
+	r := bytes.NewReader(f)
+	ts, err := text.NewGoTextFaceSource(r)
 	if err != nil {
 		panic(err)
 	}
 
-	ops := &opentype.FaceOptions{
-		Size:    48,
-		DPI:     72,
-		Hinting: font.HintingFull,
-	}
-
-	face, err := opentype.NewFace(tt, ops)
-	if err != nil {
-		panic(err)
-	}
-
-	return face
+	return ts
 
 }

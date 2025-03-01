@@ -6,16 +6,28 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"github.com/hajimehoshi/ebiten/v2/text"
-	"golang.org/x/image/font"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
 type TitleScene struct{}
 
 func (t *TitleScene) Draw(screen *ebiten.Image) {
 	textToDraw := "1 coin 1 play"
-	tw := widthOfText(assets.TitleFont, textToDraw)
-	text.Draw(screen, textToDraw, assets.TitleFont, ScreenWidth/2-tw/2, ScreenHeight-200, color.White)
+
+	op := &text.DrawOptions{
+		LayoutOptions: text.LayoutOptions{
+			PrimaryAlign: text.AlignCenter,
+		},
+	}
+
+	op.ColorScale.ScaleWithColor(color.White)
+
+	op.GeoM.Translate(float64(ScreenWidth/2), ScreenHeight-200)
+	text.Draw(screen, textToDraw, &text.GoTextFace{
+		Source: assets.TitleFont,
+		Size:   48,
+	}, op)
+
 }
 
 func (t *TitleScene) Update(state *State) error {
@@ -24,9 +36,4 @@ func (t *TitleScene) Update(state *State) error {
 		return nil
 	}
 	return nil
-}
-
-func widthOfText(f font.Face, t string) int {
-	_, textWidth := font.BoundString(f, t)
-	return textWidth.Round()
 }
