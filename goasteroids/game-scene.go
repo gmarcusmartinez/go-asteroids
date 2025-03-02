@@ -1,9 +1,11 @@
 package goasteroids
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/solarlune/resolv"
 )
 
 const (
@@ -21,6 +23,7 @@ type GameScene struct {
 	meteorsPerLevel  int
 	meteorSpawnTimer *Timer
 	velocityTimer    *Timer
+	space            *resolv.Space
 }
 
 func NewGameScence() *GameScene {
@@ -31,8 +34,11 @@ func NewGameScence() *GameScene {
 		meteorsPerLevel:  2,
 		meteorSpawnTimer: NewTimer(meteorSpawnTime),
 		velocityTimer:    NewTimer(meteorSpeedUpTime),
+		space:            resolv.NewSpace(ScreenWidth, ScreenHeight, 16, 16),
 	}
+
 	g.player = NewPlayer(g)
+	g.space.Add(g.player.playerObj)
 
 	return g
 }
@@ -47,6 +53,7 @@ func (g *GameScene) Update(state *State) error {
 	}
 
 	g.speedUpMeteors()
+	g.isPlayerCollidingWithMeteor()
 
 	return nil
 }
@@ -71,8 +78,11 @@ func (g *GameScene) spawnMeteors() {
 
 		if len(g.meteors) < g.meteorsPerLevel && g.meteorCount < g.meteorsPerLevel {
 			m := NewMeteor(g.baseVelocity, g, len(g.meteors)-1)
+			/* add meteors to game space */
+			g.space.Add(m.meteorObj)
 			g.meteorCount++
 			g.meteors[g.meteorCount] = m
+
 		}
 	}
 }
@@ -82,5 +92,14 @@ func (g *GameScene) speedUpMeteors() {
 	if g.velocityTimer.IsReady() {
 		g.velocityTimer.Reset()
 		g.baseVelocity += meteorSpeedUpAmount
+	}
+}
+
+func (g *GameScene) isPlayerCollidingWithMeteor() {
+	for _, m := range g.meteors {
+		if m.meteorObj.IsIntersecting(g.player.playerObj) {
+			data := m.meteorObj.Data().(*ObjectData)
+			fmt.Println("player collided with meteor", data.index)
+		}
 	}
 }
