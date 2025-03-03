@@ -29,8 +29,8 @@ func NewLaser(pos Vector, rotation float64, index int, g *GameScene) *Laser {
 	halfW := float64(bounds.Dx()) / 2
 	halfH := float64(bounds.Dy()) / 2
 
-	pos.X = halfW
-	pos.Y = halfH
+	pos.X -= halfW
+	pos.Y -= halfH
 
 	/* create a laser obj */
 	l := &Laser{
