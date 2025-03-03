@@ -85,6 +85,65 @@ func NewMeteor(baseVelocity float64, g *GameScene, index int) *Meteor {
 	return m
 }
 
+func NewSmallMeteor(baseVelocity float64, g *GameScene, index int) *Meteor {
+	/* target the center of the screen */
+	target := Vector{
+		X: ScreenWidth / 2,
+		Y: ScreenHeight / 2,
+	}
+
+	/* pick a random angle */
+	angle := rand.Float64() * 2 * math.Pi
+
+	/* spawn distance from center */
+	r := ScreenWidth/2.0 + 500
+
+	/* create the position vector */
+	pos := Vector{
+		X: target.X + math.Cos(angle)*r,
+		Y: target.Y + math.Sin(angle)*r,
+	}
+
+	/* give meteor random velocity */
+	velocity := baseVelocity + rand.Float64()*1.5
+
+	/* create and normalize direction vector */
+	direction := Vector{
+		X: target.X - pos.X,
+		Y: target.Y - pos.Y,
+	}
+	normalizedDirection := direction.Normalize()
+
+	/* create movement vector */
+	movement := Vector{
+		X: normalizedDirection.X * velocity,
+		Y: normalizedDirection.Y * velocity,
+	}
+
+	/* assign a sprite to the meteor */
+	sprite := assets.MeteorSpritesSmall[rand.Intn(len(assets.MeteorSpritesSmall))]
+
+	/* create the collision object */
+	meteorObj := resolv.NewCircle(pos.X, pos.Y, float64(sprite.Bounds().Dx()/2))
+
+	/* create a meteor object and return */
+	m := &Meteor{
+		game:          g,
+		position:      pos,
+		angle:         angle,
+		movement:      movement,
+		rotationSpeed: roataionSpeedMin + rand.Float64()*(roataionSpeedMax-roataionSpeedMin),
+		sprite:        sprite,
+		meteorObj:     meteorObj,
+	}
+
+	m.meteorObj.SetPosition(pos.X, pos.Y)
+	m.meteorObj.Tags().Set(TagMeteor | TagSmall)
+	m.meteorObj.SetData(&ObjectData{index: index})
+
+	return m
+}
+
 func (m *Meteor) Draw(screen *ebiten.Image) {
 	bounds := m.sprite.Bounds()
 	halfW := float64(bounds.Dx()) / 2

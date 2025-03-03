@@ -3,6 +3,7 @@ package assets
 import (
 	"bytes"
 	"embed"
+	"fmt"
 	"image"
 	_ "image/png"
 	"io/fs"
@@ -19,6 +20,9 @@ var TitleFont = mustLoadFontFace("fonts/title.ttf")
 var MeteorSprites = mustLoadImages("images/meteors/*png")
 var MeteorSpritesSmall = mustLoadImages("images/meteors-small/*png")
 var LaserSprite = mustLoadImage("images/laser.png")
+var ExplosionSprite = mustLoadImage("images/explosion.png")
+var ExplosionSmallSprite = mustLoadImage("images/explosion-small.png")
+var Explosion = createExplosion()
 
 func mustLoadImage(name string) *ebiten.Image {
 	f, err := assets.Open(name)
@@ -64,4 +68,14 @@ func mustLoadFontFace(name string) *text.GoTextFaceSource {
 
 	return ts
 
+}
+
+func createExplosion() []*ebiten.Image {
+	var frames []*ebiten.Image
+	for i := 0; i <= 11; i++ {
+		frame := mustLoadImage(fmt.Sprintf("images/explosion/%d.png", i+1))
+		frames = append(frames, frame)
+	}
+
+	return frames
 }
