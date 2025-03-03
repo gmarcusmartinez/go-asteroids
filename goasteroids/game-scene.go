@@ -24,6 +24,8 @@ type GameScene struct {
 	meteorSpawnTimer *Timer
 	velocityTimer    *Timer
 	space            *resolv.Space
+	lasers           map[int]*Laser
+	laserCount       int
 }
 
 func NewGameScence() *GameScene {
@@ -35,6 +37,8 @@ func NewGameScence() *GameScene {
 		meteorSpawnTimer: NewTimer(meteorSpawnTime),
 		velocityTimer:    NewTimer(meteorSpeedUpTime),
 		space:            resolv.NewSpace(ScreenWidth, ScreenHeight, 16, 16),
+		lasers:           make(map[int]*Laser),
+		laserCount:       0,
 	}
 
 	g.player = NewPlayer(g)
