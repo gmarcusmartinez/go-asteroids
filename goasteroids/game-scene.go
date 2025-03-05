@@ -1,7 +1,6 @@
 package goasteroids
 
 import (
-	"fmt"
 	"go-asteroids/assets"
 	"math/rand"
 	"time"
@@ -34,9 +33,10 @@ type GameScene struct {
 	explosionSmallSprite *ebiten.Image
 	explosionFrames      []*ebiten.Image
 	cleanupTimer         *Timer
+	playerIsDead         bool
 }
 
-func NewGameScence() *GameScene {
+func NewGameScene() *GameScene {
 	g := &GameScene{
 		baseVelocity:         baseMeteorVelocity,
 		meteors:              make(map[int]*Meteor),
@@ -63,6 +63,10 @@ func NewGameScence() *GameScene {
 
 func (g *GameScene) Update(state *State) error {
 	g.player.Update()
+
+	g.isPlayerDying()
+
+	g.isPlayerDead(state)
 
 	g.spawnMeteors()
 
@@ -129,8 +133,13 @@ func (g *GameScene) speedUpMeteors() {
 func (g *GameScene) isPlayerCollidingWithMeteor() {
 	for _, m := range g.meteors {
 		if m.meteorObj.IsIntersecting(g.player.playerObj) {
-			data := m.meteorObj.Data().(*ObjectData)
-			fmt.Println("player collided with meteor", data.index)
+			if !g.player.isShielded {
+				/* trigger dying animation */
+				m.game.player.isDying = true
+				break
+			} else {
+				/* bounce meteor*/
+			}
 		}
 	}
 }
@@ -178,5 +187,39 @@ func (g *GameScene) cleanupMeteorsAndAliens() {
 			}
 		}
 		g.cleanupTimer.Reset()
+	}
+}
+
+func (g *GameScene) isPlayerDying() {
+	const maxDyingFrames = 12
+
+	if !g.player.isDying {
+		return
+	}
+
+	g.player.dyingTimer.Update()
+	if !g.player.dyingTimer.IsReady() {
+		return
+	}
+
+	g.player.dyingTimer.Reset()
+	g.player.dyingCounter++
+
+	if g.player.dyingCounter == maxDyingFrames {
+		g.player.isDying = false
+		g.player.isDead = true
+		return
+	}
+
+	/* run animation */
+	g.player.sprite = g.explosionFrames[g.player.dyingCounter]
+}
+
+func (g *GameScene) isPlayerDead(state *State) {
+	if g.player.isDead {
+		g.player.livesRemaining--
+		if g.player.livesRemaining == 0 {
+			state.SceneManager.GoToScene(NewGameScene())
+		}
 	}
 }

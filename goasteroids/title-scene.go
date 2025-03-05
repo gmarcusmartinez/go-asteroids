@@ -39,7 +39,7 @@ func (t *TitleScene) Draw(screen *ebiten.Image) {
 
 func (t *TitleScene) Update(state *State) error {
 	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
-		state.SceneManager.GoToScene(NewGameScence())
+		state.SceneManager.GoToScene(NewGameScene())
 		return nil
 	}
 

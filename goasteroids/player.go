@@ -10,14 +10,15 @@ import (
 )
 
 const (
-	rotationPerSecond = math.Pi
-	maxAcceleration   = 8.0
-	ScreenWidth       = 1280
-	ScreenHeight      = 720
-	shootCooldown     = time.Millisecond * 150
-	burstCooldown     = time.Millisecond * 500
-	laserSpawnOffset  = 50.0
-	maxShotsPerBurst  = 3
+	rotationPerSecond    = math.Pi
+	maxAcceleration      = 8.0
+	ScreenWidth          = 1280
+	ScreenHeight         = 720
+	shootCooldown        = time.Millisecond * 150
+	burstCooldown        = time.Millisecond * 500
+	laserSpawnOffset     = 50.0
+	maxShotsPerBurst     = 3
+	dyingAnimationAmount = 50 * time.Millisecond
 )
 
 var currentAcceleration float64
@@ -32,6 +33,12 @@ type Player struct {
 	playerObj      *resolv.Circle
 	shootCooldown  *Timer
 	burstCooldown  *Timer
+	isShielded     bool
+	isDying        bool
+	isDead         bool
+	dyingTimer     *Timer
+	dyingCounter   int
+	livesRemaining int
 }
 
 func NewPlayer(game *GameScene) *Player {
@@ -51,12 +58,18 @@ func NewPlayer(game *GameScene) *Player {
 	playerObj := resolv.NewCircle(pos.X, pos.Y, float64(sprite.Bounds().Dx()/2))
 
 	p := &Player{
-		sprite:        sprite,
-		game:          game,
-		position:      pos,
-		playerObj:     playerObj,
-		shootCooldown: NewTimer(shootCooldown),
-		burstCooldown: NewTimer(burstCooldown),
+		sprite:         sprite,
+		game:           game,
+		position:       pos,
+		playerObj:      playerObj,
+		shootCooldown:  NewTimer(shootCooldown),
+		burstCooldown:  NewTimer(burstCooldown),
+		isShielded:     false,
+		isDying:        false,
+		isDead:         false,
+		dyingTimer:     NewTimer(dyingAnimationAmount),
+		dyingCounter:   0,
+		livesRemaining: 1,
 	}
 
 	p.playerObj.SetPosition(pos.X, pos.Y)
@@ -83,6 +96,8 @@ func (p *Player) Draw(screen *ebiten.Image) {
 
 func (p *Player) Update() {
 	speed := rotationPerSecond / float64(ebiten.TPS())
+
+	p.isPlayerDead()
 
 	if ebiten.IsKeyPressed(ebiten.KeyLeft) {
 		p.rotation -= speed
@@ -153,6 +168,12 @@ func (p *Player) fireLasers() {
 		}
 	}
 
+}
+
+func (p *Player) isPlayerDead() {
+	if p.isDead {
+		p.game.playerIsDead = true
+	}
 }
 
 func (p *Player) keepOnScreen() {
