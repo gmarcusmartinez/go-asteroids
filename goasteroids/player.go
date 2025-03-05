@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/solarlune/resolv"
 )
 
@@ -108,6 +109,7 @@ func (p *Player) Update() {
 	}
 
 	p.accelerate()
+	p.isDoneAccelerating()
 
 	p.playerObj.SetPosition(p.position.X, p.position.Y)
 	p.burstCooldown.Update()
@@ -138,6 +140,19 @@ func (p *Player) accelerate() {
 		p.position.X += dx
 		p.position.Y += dy
 
+		/* play thrust sound */
+		if !p.game.thrustPlayer.IsPlaying() {
+			_ = p.game.thrustPlayer.Rewind()
+			p.game.thrustPlayer.Play()
+		}
+	}
+}
+
+func (p *Player) isDoneAccelerating() {
+	if inpututil.IsKeyJustReleased(ebiten.KeyUp) {
+		if p.game.thrustPlayer.IsPlaying() {
+			p.game.thrustPlayer.Pause()
+		}
 	}
 }
 
