@@ -122,45 +122,47 @@ func (p *Player) Update() {
 }
 
 func (p *Player) accelerate() {
-	if ebiten.IsKeyPressed(ebiten.KeyUp) {
-		p.keepOnScreen()
+	if !ebiten.IsKeyPressed(ebiten.KeyUp) {
+		return
+	}
 
-		if currentAcceleration < maxAcceleration {
-			currentAcceleration = p.playerVelocity + 4
-		}
+	p.keepOnScreen()
 
-		if currentAcceleration >= 8 {
-			currentAcceleration = 8
-		}
+	if currentAcceleration < maxAcceleration {
+		currentAcceleration = p.playerVelocity + 4
+	}
 
-		p.playerVelocity = currentAcceleration
+	if currentAcceleration >= 8 {
+		currentAcceleration = 8
+	}
 
-		/* move in the direction we are pointing */
-		dx := math.Sin(p.rotation) * currentAcceleration
-		dy := math.Cos(p.rotation) * -currentAcceleration
+	p.playerVelocity = currentAcceleration
 
-		/* show exhaust */
-		bounds := p.sprite.Bounds()
-		halfW := float64(bounds.Dx()) / 2
-		halfH := float64(bounds.Dy()) / 2
+	/* move in the direction we are pointing */
+	dx := math.Sin(p.rotation) * currentAcceleration
+	dy := math.Cos(p.rotation) * -currentAcceleration
 
-		/* where to spawn exhaust */
-		exhaustSpawnPosition := Vector{
-			p.position.X + halfW + math.Sin(p.rotation)*exhaustSpawnOffset,
-			p.position.Y + halfH + math.Cos(p.rotation)*-exhaustSpawnOffset,
-		}
+	/* show exhaust */
+	bounds := p.sprite.Bounds()
+	halfW := float64(bounds.Dx()) / 2
+	halfH := float64(bounds.Dy()) / 2
 
-		p.game.exhaust = NewExhaust(exhaustSpawnPosition, p.rotation+180.0*math.Pi/180.0)
+	/* where to spawn exhaust */
+	exhaustSpawnPosition := Vector{
+		p.position.X + halfW + math.Sin(p.rotation)*exhaustSpawnOffset,
+		p.position.Y + halfH + math.Cos(p.rotation)*-exhaustSpawnOffset,
+	}
 
-		/* move player */
-		p.position.X += dx
-		p.position.Y += dy
+	p.game.exhaust = NewExhaust(exhaustSpawnPosition, p.rotation+180.0*math.Pi/180.0)
 
-		/* play thrust sound */
-		if !p.game.thrustPlayer.IsPlaying() {
-			_ = p.game.thrustPlayer.Rewind()
-			p.game.thrustPlayer.Play()
-		}
+	/* move player */
+	p.position.X += dx
+	p.position.Y += dy
+
+	/* play thrust sound */
+	if !p.game.thrustPlayer.IsPlaying() {
+		_ = p.game.thrustPlayer.Rewind()
+		p.game.thrustPlayer.Play()
 	}
 }
 
@@ -221,32 +223,51 @@ func (p *Player) updateExhaustSprite() {
 }
 
 func (p *Player) fireLasers() {
-	if p.burstCooldown.IsReady() {
-		if p.shootCooldown.IsReady() && ebiten.IsKeyPressed(ebiten.KeySpace) {
-			p.shootCooldown.Reset()
-			shotsFired++
-			if shotsFired <= maxShotsPerBurst {
-				bounds := p.sprite.Bounds()
-				halfW := float64(bounds.Dx()) / 2
-				halfH := float64(bounds.Dy()) / 2
-
-				spawnPos := Vector{
-					p.position.X + halfW + math.Sin(p.rotation)*laserSpawnOffset,
-					p.position.Y + halfH + math.Cos(p.rotation)*-laserSpawnOffset,
-				}
-
-				p.game.laserCount++
-				laser := NewLaser(spawnPos, p.rotation, p.game.laserCount, p.game)
-				p.game.lasers[p.game.laserCount] = laser
-
-				p.game.space.Add(laser.laserObj)
-			} else {
-				p.burstCooldown.Reset()
-				shotsFired = 0
-			}
-		}
+	if !p.burstCooldown.IsReady() {
+		return
 	}
 
+	if p.shootCooldown.IsReady() && ebiten.IsKeyPressed(ebiten.KeySpace) {
+		p.shootCooldown.Reset()
+		shotsFired++
+		if shotsFired <= maxShotsPerBurst {
+			bounds := p.sprite.Bounds()
+			halfW := float64(bounds.Dx()) / 2
+			halfH := float64(bounds.Dy()) / 2
+
+			spawnPos := Vector{
+				p.position.X + halfW + math.Sin(p.rotation)*laserSpawnOffset,
+				p.position.Y + halfH + math.Cos(p.rotation)*-laserSpawnOffset,
+			}
+
+			p.game.laserCount++
+			laser := NewLaser(spawnPos, p.rotation, p.game.laserCount, p.game)
+			p.game.lasers[p.game.laserCount] = laser
+
+			p.game.space.Add(laser.laserObj)
+
+			switch shotsFired {
+			case 1:
+				if !p.game.laserOnePlayer.IsPlaying() {
+					_ = p.game.laserOnePlayer.Rewind()
+					p.game.laserOnePlayer.Play()
+				}
+			case 2:
+				if !p.game.laserTwoPlayer.IsPlaying() {
+					_ = p.game.laserTwoPlayer.Rewind()
+					p.game.laserTwoPlayer.Play()
+				}
+			case 3:
+				if !p.game.laserThreePlayer.IsPlaying() {
+					_ = p.game.laserThreePlayer.Rewind()
+					p.game.laserThreePlayer.Play()
+				}
+			}
+		} else {
+			p.burstCooldown.Reset()
+			shotsFired = 0
+		}
+	}
 }
 
 func (p *Player) isPlayerDead() {

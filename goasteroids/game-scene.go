@@ -38,6 +38,9 @@ type GameScene struct {
 	audioContext         *audio.Context
 	thrustPlayer         *audio.Player
 	exhaust              *Exhaust
+	laserOnePlayer       *audio.Player
+	laserTwoPlayer       *audio.Player
+	laserThreePlayer     *audio.Player
 }
 
 func NewGameScene() *GameScene {
@@ -66,6 +69,15 @@ func NewGameScene() *GameScene {
 	g.audioContext = audio.NewContext(48000)
 	thrustPlayer, _ := g.audioContext.NewPlayer(assets.ThrustSound)
 	g.thrustPlayer = thrustPlayer
+
+	laserOnePlayer, _ := g.audioContext.NewPlayer(assets.LaserOneSound)
+	g.laserOnePlayer = laserOnePlayer
+
+	laserTwoPlayer, _ := g.audioContext.NewPlayer(assets.LaserTwoSound)
+	g.laserTwoPlayer = laserTwoPlayer
+
+	laserThreePlayer, _ := g.audioContext.NewPlayer(assets.LaserThreeSound)
+	g.laserThreePlayer = laserThreePlayer
 
 	return g
 }
@@ -243,7 +255,6 @@ func (g *GameScene) isPlayerDead(state *State) {
 	}
 
 	g.player.livesRemaining--
-
 	if g.player.livesRemaining == 0 {
 		g.Reset()
 		state.SceneManager.GoToScene(g)

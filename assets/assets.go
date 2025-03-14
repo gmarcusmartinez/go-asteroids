@@ -26,6 +26,9 @@ var ExplosionSprite = mustLoadImage("images/explosion.png")
 var ExplosionSmallSprite = mustLoadImage("images/explosion-small.png")
 var Explosion = createExplosion()
 var ThrustSound = mustLoadOggVorbis("audio/thrust.ogg")
+var LaserOneSound = mustLoadOggVorbis("audio/fire.ogg")
+var LaserTwoSound = mustLoadOggVorbis("audio/fire.ogg")
+var LaserThreeSound = mustLoadOggVorbis("audio/fire.ogg")
 
 func mustLoadOggVorbis(name string) *vorbis.Stream {
 	f, err := assets.ReadFile(name)
