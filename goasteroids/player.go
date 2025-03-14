@@ -110,6 +110,8 @@ func (p *Player) Update() {
 
 	p.accelerate()
 	p.isDoneAccelerating()
+	p.reverse()
+	p.isDoneReversing()
 	p.updateExhaustSprite()
 
 	p.playerObj.SetPosition(p.position.X, p.position.Y)
@@ -143,12 +145,12 @@ func (p *Player) accelerate() {
 		halfH := float64(bounds.Dy()) / 2
 
 		/* where to spawn exhaust */
-		exhauseSpawnPosition := Vector{
+		exhaustSpawnPosition := Vector{
 			p.position.X + halfW + math.Sin(p.rotation)*exhaustSpawnOffset,
 			p.position.Y + halfH + math.Cos(p.rotation)*-exhaustSpawnOffset,
 		}
 
-		p.game.exhaust = NewExhaust(exhauseSpawnPosition, p.rotation+180.0*math.Pi/180.0)
+		p.game.exhaust = NewExhaust(exhaustSpawnPosition, p.rotation+180.0*math.Pi/180.0)
 
 		/* move player */
 		p.position.X += dx
@@ -170,8 +172,50 @@ func (p *Player) isDoneAccelerating() {
 	}
 }
 
+func (p *Player) reverse() {
+	if !ebiten.IsKeyPressed(ebiten.KeyDown) {
+		return
+	}
+
+	p.keepOnScreen()
+	dx := math.Sin(p.rotation) * -3
+	dy := math.Cos(p.rotation) * 3
+
+	/* show exhaust */
+	bounds := p.sprite.Bounds()
+	halfW := float64(bounds.Dx()) / 2
+	halfH := float64(bounds.Dy()) / 2
+
+	/* where to spawn exhaust */
+	exhaustSpawnPosition := Vector{
+		p.position.X + halfW + math.Sin(p.rotation)*exhaustSpawnOffset,
+		p.position.Y + halfH + math.Cos(p.rotation)*-exhaustSpawnOffset,
+	}
+
+	p.game.exhaust = NewExhaust(exhaustSpawnPosition, p.rotation+180.0*math.Pi/180.0)
+
+	/* move player */
+	p.position.X += dx
+	p.position.Y += dy
+
+	p.playerObj.SetPosition(p.position.X, p.position.Y)
+
+	if !p.game.thrustPlayer.IsPlaying() {
+		_ = p.game.thrustPlayer.Rewind()
+		p.game.thrustPlayer.Play()
+	}
+}
+
+func (p *Player) isDoneReversing() {
+	if inpututil.IsKeyJustReleased(ebiten.KeyDown) {
+		if p.game.thrustPlayer.IsPlaying() {
+			p.game.thrustPlayer.Pause()
+		}
+	}
+}
+
 func (p *Player) updateExhaustSprite() {
-	if !ebiten.IsKeyPressed(ebiten.KeyUp) && p.game.exhaust != nil {
+	if !ebiten.IsKeyPressed(ebiten.KeyUp) && !ebiten.IsKeyPressed(ebiten.KeyDown) && p.game.exhaust != nil {
 		p.game.exhaust = nil
 	}
 }

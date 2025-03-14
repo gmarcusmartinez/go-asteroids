@@ -238,13 +238,17 @@ func (g *GameScene) isPlayerDying() {
 }
 
 func (g *GameScene) isPlayerDead(state *State) {
-	if g.player.isDead {
-		g.player.livesRemaining--
-		if g.player.livesRemaining == 0 {
-			g.Reset()
-			state.SceneManager.GoToScene(g)
-		}
+	if !g.player.isDead {
+		return
 	}
+
+	g.player.livesRemaining--
+
+	if g.player.livesRemaining == 0 {
+		g.Reset()
+		state.SceneManager.GoToScene(g)
+	}
+
 }
 
 func (g *GameScene) Reset() {
