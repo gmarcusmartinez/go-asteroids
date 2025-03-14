@@ -110,6 +110,7 @@ func (p *Player) Update() {
 
 	p.accelerate()
 	p.isDoneAccelerating()
+	p.updateExhaustSprite()
 
 	p.playerObj.SetPosition(p.position.X, p.position.Y)
 	p.burstCooldown.Update()
@@ -136,6 +137,19 @@ func (p *Player) accelerate() {
 		dx := math.Sin(p.rotation) * currentAcceleration
 		dy := math.Cos(p.rotation) * -currentAcceleration
 
+		/* show exhaust */
+		bounds := p.sprite.Bounds()
+		halfW := float64(bounds.Dx()) / 2
+		halfH := float64(bounds.Dy()) / 2
+
+		/* where to spawn exhaust */
+		exhauseSpawnPosition := Vector{
+			p.position.X + halfW + math.Sin(p.rotation)*exhaustSpawnOffset,
+			p.position.Y + halfH + math.Cos(p.rotation)*-exhaustSpawnOffset,
+		}
+
+		p.game.exhaust = NewExhaust(exhauseSpawnPosition, p.rotation+180.0*math.Pi/180.0)
+
 		/* move player */
 		p.position.X += dx
 		p.position.Y += dy
@@ -153,6 +167,12 @@ func (p *Player) isDoneAccelerating() {
 		if p.game.thrustPlayer.IsPlaying() {
 			p.game.thrustPlayer.Pause()
 		}
+	}
+}
+
+func (p *Player) updateExhaustSprite() {
+	if !ebiten.IsKeyPressed(ebiten.KeyUp) && p.game.exhaust != nil {
+		p.game.exhaust = nil
 	}
 }
 

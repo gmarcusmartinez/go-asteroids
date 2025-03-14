@@ -16,11 +16,12 @@ import (
 //go:embed *
 var assets embed.FS
 
-var PlayerSprite = mustLoadImage("images/player.png")
 var TitleFont = mustLoadFontFace("fonts/title.ttf")
+var ExhaustSprite = mustLoadImage("images/fire.png")
+var LaserSprite = mustLoadImage("images/laser.png")
 var MeteorSprites = mustLoadImages("images/meteors/*png")
 var MeteorSpritesSmall = mustLoadImages("images/meteors-small/*png")
-var LaserSprite = mustLoadImage("images/laser.png")
+var PlayerSprite = mustLoadImage("images/player.png")
 var ExplosionSprite = mustLoadImage("images/explosion.png")
 var ExplosionSmallSprite = mustLoadImage("images/explosion-small.png")
 var Explosion = createExplosion()
