@@ -41,6 +41,7 @@ type GameScene struct {
 	laserOnePlayer       *audio.Player
 	laserTwoPlayer       *audio.Player
 	laserThreePlayer     *audio.Player
+	explosionPlayer      *audio.Player
 }
 
 func NewGameScene() *GameScene {
@@ -78,6 +79,9 @@ func NewGameScene() *GameScene {
 
 	laserThreePlayer, _ := g.audioContext.NewPlayer(assets.LaserThreeSound)
 	g.laserThreePlayer = laserThreePlayer
+
+	explosionPlayer, _ := g.audioContext.NewPlayer(assets.ExplosionSound)
+	g.explosionPlayer = explosionPlayer
 
 	return g
 }
@@ -170,6 +174,11 @@ func (g *GameScene) isPlayerCollidingWithMeteor() {
 			if !g.player.isShielded {
 				/* trigger dying animation */
 				m.game.player.isDying = true
+				/* play explosion sound */
+				if !g.explosionPlayer.IsPlaying() {
+					_ = g.explosionPlayer.Rewind()
+					g.explosionPlayer.Play()
+				}
 				break
 			} else {
 				/* bounce meteor*/
@@ -186,11 +195,23 @@ func (g *GameScene) isMeteorHitByPlayerLaser() {
 					/* hit small meteor */
 					m.sprite = g.explosionSmallSprite
 					g.score++
+
+					/* play explosion sound */
+					if !g.explosionPlayer.IsPlaying() {
+						_ = g.explosionPlayer.Rewind()
+						g.explosionPlayer.Play()
+					}
 				} else {
 					/* hit large meteor */
 					oldPos := m.position
 					m.sprite = g.explosionSprite
 					g.score++
+
+					/* play explosion sound */
+					if !g.explosionPlayer.IsPlaying() {
+						_ = g.explosionPlayer.Rewind()
+						g.explosionPlayer.Play()
+					}
 
 					numToSpawn := rand.Intn(numberOfSmallMeteorsFromLargeMetoer)
 					for range numToSpawn {
