@@ -18,6 +18,7 @@ func (g *Game) Update() error {
 		meteors := make(map[int]*Meteor)
 		g.sceneManager.GoToScene(&TitleScene{
 			meteors: meteors,
+			stars:   GenerateStars(numberOfStars),
 		})
 	}
 
