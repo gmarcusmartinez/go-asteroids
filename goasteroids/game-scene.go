@@ -16,6 +16,7 @@ const (
 	meteorSpeedUpAmount  = 0.1
 	meteorSpeedUpTime    = 1000 * time.Millisecond
 	cleanupExplosionTime = 200 * time.Millisecond
+	baseBeatWaitTime     = 1600
 )
 
 type GameScene struct {
@@ -42,6 +43,11 @@ type GameScene struct {
 	laserTwoPlayer       *audio.Player
 	laserThreePlayer     *audio.Player
 	explosionPlayer      *audio.Player
+	beatOnePlayer        *audio.Player
+	beatTwoPlayer        *audio.Player
+	beatTimer            *Timer
+	beatWaitTime         int
+	playBeatOne          bool
 }
 
 func NewGameScene() *GameScene {
@@ -58,6 +64,8 @@ func NewGameScene() *GameScene {
 		explosionSprite:      assets.ExplosionSprite,
 		explosionSmallSprite: assets.ExplosionSmallSprite,
 		cleanupTimer:         NewTimer(cleanupExplosionTime),
+		beatTimer:            NewTimer(2 * time.Second),
+		beatWaitTime:         baseBeatWaitTime,
 	}
 
 	g.player = NewPlayer(g)
@@ -82,6 +90,12 @@ func NewGameScene() *GameScene {
 
 	explosionPlayer, _ := g.audioContext.NewPlayer(assets.ExplosionSound)
 	g.explosionPlayer = explosionPlayer
+
+	beatOnePlayer, _ := g.audioContext.NewPlayer(assets.BeatOneSound)
+	g.beatOnePlayer = beatOnePlayer
+
+	beatTwoPlayer, _ := g.audioContext.NewPlayer(assets.BeatTwoSound)
+	g.beatTwoPlayer = beatTwoPlayer
 
 	return g
 }
@@ -113,6 +127,8 @@ func (g *GameScene) Update(state *State) error {
 
 	g.cleanupMeteorsAndAliens()
 
+	g.beatSound()
+
 	return nil
 }
 
@@ -136,6 +152,27 @@ func (g *GameScene) Draw(screen *ebiten.Image) {
 
 func (g *GameScene) Layout(width, height int) (ScreenWidth, ScreenHeight int) {
 	return width, height
+}
+
+func (g *GameScene) beatSound() {
+	g.beatTimer.Update()
+	if g.beatTimer.IsReady() {
+		if g.playBeatOne {
+			_ = g.beatOnePlayer.Rewind()
+			g.beatOnePlayer.Play()
+			g.beatTimer.Reset()
+		} else {
+			_ = g.beatTwoPlayer.Rewind()
+			g.beatTwoPlayer.Play()
+			g.beatTimer.Reset()
+		}
+		g.playBeatOne = !g.playBeatOne
+		/* speed up timer */
+		if g.beatWaitTime > 400 {
+			g.beatWaitTime = g.beatWaitTime - 25
+			g.beatTimer = NewTimer(time.Millisecond * time.Duration(g.beatWaitTime))
+		}
+	}
 }
 
 func (g *GameScene) updateExhaust() {
