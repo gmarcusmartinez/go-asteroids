@@ -3,6 +3,7 @@ package goasteroids
 import (
 	"go-asteroids/assets"
 	"image/color"
+	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -64,4 +65,16 @@ func (t *TitleScene) Update(state *State) error {
 	}
 
 	return nil
+}
+
+func init() {
+	hs, err := getHighScore()
+	if err != nil {
+		log.Println("Error getting high score", err)
+	}
+
+	highScore = hs
+	originalHighScore = hs
+
+	log.Println("Hello")
 }

@@ -17,6 +17,8 @@ import (
 var assets embed.FS
 
 var TitleFont = mustLoadFontFace("fonts/title.ttf")
+var ScoreFont = mustLoadFontFace("fonts/score.ttf")
+var LevelFont = mustLoadFontFace("fonts/score.ttf")
 var ExhaustSprite = mustLoadImage("images/fire.png")
 var LaserSprite = mustLoadImage("images/laser.png")
 var MeteorSprites = mustLoadImages("images/meteors/*png")

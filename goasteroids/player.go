@@ -159,18 +159,7 @@ func (p *Player) accelerate() {
 	dx := math.Sin(p.rotation) * currentAcceleration
 	dy := math.Cos(p.rotation) * -currentAcceleration
 
-	/* show exhaust */
-	bounds := p.sprite.Bounds()
-	halfW := float64(bounds.Dx()) / 2
-	halfH := float64(bounds.Dy()) / 2
-
-	/* where to spawn exhaust */
-	exhaustSpawnPosition := Vector{
-		p.position.X + halfW + math.Sin(p.rotation)*exhaustSpawnOffset,
-		p.position.Y + halfH + math.Cos(p.rotation)*-exhaustSpawnOffset,
-	}
-
-	p.game.exhaust = NewExhaust(exhaustSpawnPosition, p.rotation+180.0*math.Pi/180.0)
+	p.showExhaust()
 
 	/* move player */
 	p.position.X += dx
@@ -200,18 +189,7 @@ func (p *Player) reverse() {
 	dx := math.Sin(p.rotation) * -3
 	dy := math.Cos(p.rotation) * 3
 
-	/* show exhaust */
-	bounds := p.sprite.Bounds()
-	halfW := float64(bounds.Dx()) / 2
-	halfH := float64(bounds.Dy()) / 2
-
-	/* where to spawn exhaust */
-	exhaustSpawnPosition := Vector{
-		p.position.X + halfW + math.Sin(p.rotation)*exhaustSpawnOffset,
-		p.position.Y + halfH + math.Cos(p.rotation)*-exhaustSpawnOffset,
-	}
-
-	p.game.exhaust = NewExhaust(exhaustSpawnPosition, p.rotation+180.0*math.Pi/180.0)
+	p.showExhaust()
 
 	/* move player */
 	p.position.X += dx
@@ -315,4 +293,19 @@ func (p *Player) keepOnScreen() {
 		p.position.Y = ScreenHeight
 		p.playerObj.SetPosition(p.position.X, ScreenHeight)
 	}
+}
+
+func (p *Player) showExhaust() {
+	/* show exhaust */
+	bounds := p.sprite.Bounds()
+	halfW := float64(bounds.Dx()) / 2
+	halfH := float64(bounds.Dy()) / 2
+
+	/* where to spawn exhaust */
+	exhaustSpawnPosition := Vector{
+		p.position.X + halfW + math.Sin(p.rotation)*exhaustSpawnOffset,
+		p.position.Y + halfH + math.Cos(p.rotation)*-exhaustSpawnOffset,
+	}
+
+	p.game.exhaust = NewExhaust(exhaustSpawnPosition, p.rotation+180.0*math.Pi/180.0)
 }

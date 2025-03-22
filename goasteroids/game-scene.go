@@ -1,12 +1,16 @@
 package goasteroids
 
 import (
+	"fmt"
 	"go-asteroids/assets"
+	"image/color"
+	"log"
 	"math/rand"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/solarlune/resolv"
 )
 
@@ -50,6 +54,7 @@ type GameScene struct {
 	beatWaitTime         int
 	playBeatOne          bool
 	stars                []*Star
+	currentLevel         int
 }
 
 func NewGameScene() *GameScene {
@@ -69,6 +74,7 @@ func NewGameScene() *GameScene {
 		beatTimer:            NewTimer(2 * time.Second),
 		beatWaitTime:         baseBeatWaitTime,
 		stars:                GenerateStars(numberOfStars),
+		currentLevel:         1,
 	}
 
 	g.player = NewPlayer(g)
@@ -164,6 +170,57 @@ func (g *GameScene) Draw(screen *ebiten.Image) {
 			li.Draw(screen)
 		}
 	}
+
+	/* draw score */
+	textToDraw := fmt.Sprintf("%06d", g.score)
+	op := &text.DrawOptions{
+		LayoutOptions: text.LayoutOptions{
+			PrimaryAlign: text.AlignCenter,
+		},
+	}
+	op.ColorScale.ScaleWithColor(color.White)
+	op.GeoM.Translate(ScreenWidth/2, 40)
+
+	text.Draw(screen, textToDraw, &text.GoTextFace{
+		Source: assets.ScoreFont,
+		Size:   24,
+	}, op)
+
+	/* draw high score */
+	if g.score >= highScore {
+		highScore = g.score
+	}
+
+	textToDraw = fmt.Sprintf("HIGH SCORE %06d", highScore)
+	op = &text.DrawOptions{
+		LayoutOptions: text.LayoutOptions{
+			PrimaryAlign: text.AlignCenter,
+		},
+	}
+
+	op.ColorScale.ScaleWithColor(color.White)
+	op.GeoM.Translate(ScreenWidth/2, 80)
+
+	text.Draw(screen, textToDraw, &text.GoTextFace{
+		Source: assets.ScoreFont,
+		Size:   16,
+	}, op)
+
+	/* draw current level */
+	textToDraw = fmt.Sprintf("LEVEL %d", g.currentLevel)
+	op = &text.DrawOptions{
+		LayoutOptions: text.LayoutOptions{
+			PrimaryAlign: text.AlignCenter,
+		},
+	}
+
+	op.ColorScale.ScaleWithColor(color.White)
+	op.GeoM.Translate(ScreenWidth/2, ScreenHeight-40)
+
+	text.Draw(screen, textToDraw, &text.GoTextFace{
+		Source: assets.LevelFont,
+		Size:   16,
+	}, op)
 
 }
 
@@ -328,10 +385,17 @@ func (g *GameScene) isPlayerDead(state *State) {
 	if !g.player.isDead {
 		return
 	}
-
 	g.player.livesRemaining--
+
 	if g.player.livesRemaining == 0 {
-		g.Reset()
+		/* check for highscore */
+		if g.score > originalHighScore {
+			err := updateHighScore(g.score)
+			if err != nil {
+				log.Println(err)
+			}
+		}
+
 		/* go to gameover scene */
 		state.SceneManager.GoToScene(&GameOverScene{
 			game:        g,
@@ -344,11 +408,13 @@ func (g *GameScene) isPlayerDead(state *State) {
 		score := g.score
 		livesRemaining := g.player.livesRemaining
 		lifeSlice := g.player.lifeIndicators[:len(g.player.lifeIndicators)-1]
+		stars := g.stars
 
 		g.Reset()
 		g.player.livesRemaining = livesRemaining
 		g.score = score
 		g.player.lifeIndicators = lifeSlice
+		g.stars = stars
 	}
 
 }
