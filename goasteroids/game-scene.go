@@ -119,6 +119,8 @@ func (g *GameScene) Update(state *State) error {
 
 	g.updateExhaust()
 
+	g.updateShield()
+
 	g.isPlayerDying()
 
 	g.isPlayerDead(state)
@@ -264,6 +266,12 @@ func (g *GameScene) beatSound() {
 func (g *GameScene) updateExhaust() {
 	if g.exhaust != nil {
 		g.exhaust.Update()
+	}
+}
+
+func (g *GameScene) updateShield() {
+	if g.shield != nil {
+		g.shield.Update()
 	}
 }
 
@@ -421,12 +429,14 @@ func (g *GameScene) isPlayerDead(state *State) {
 		livesRemaining := g.player.livesRemaining
 		lifeSlice := g.player.lifeIndicators[:len(g.player.lifeIndicators)-1]
 		stars := g.stars
+		shieldsRemaining := g.player.shieldsRemaining
 
 		g.Reset()
 		g.player.livesRemaining = livesRemaining
 		g.score = score
 		g.player.lifeIndicators = lifeSlice
 		g.stars = stars
+		g.player.shieldsRemaining = shieldsRemaining
 	}
 
 }
@@ -445,6 +455,7 @@ func (g *GameScene) Reset() {
 	g.exhaust = nil
 	g.space.RemoveAll()
 	g.space.Add(g.player.playerObj)
+	g.player.shieldsRemaining = numberOfShields
 }
 
 func (g *GameScene) isLevelComplete(state *State) {
