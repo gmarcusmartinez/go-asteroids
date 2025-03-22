@@ -55,6 +55,8 @@ type GameScene struct {
 	playBeatOne          bool
 	stars                []*Star
 	currentLevel         int
+	shield               *Shield
+	shieldsUpPlayer      *audio.Player
 }
 
 func NewGameScene() *GameScene {
@@ -106,6 +108,9 @@ func NewGameScene() *GameScene {
 	beatTwoPlayer, _ := g.audioContext.NewPlayer(assets.BeatTwoSound)
 	g.beatTwoPlayer = beatTwoPlayer
 
+	shieldsUpPlayer, _ := g.audioContext.NewPlayer(assets.ShieldSound)
+	g.shieldsUpPlayer = shieldsUpPlayer
+
 	return g
 }
 
@@ -138,6 +143,8 @@ func (g *GameScene) Update(state *State) error {
 
 	g.beatSound()
 
+	g.isLevelComplete(state)
+
 	return nil
 }
 
@@ -152,6 +159,11 @@ func (g *GameScene) Draw(screen *ebiten.Image) {
 	/* draw exhaust */
 	if g.exhaust != nil {
 		g.exhaust.Draw(screen)
+	}
+
+	/* draw shield */
+	if g.shield != nil {
+		g.shield.Draw(screen)
 	}
 
 	/* draw meteors */
@@ -433,4 +445,33 @@ func (g *GameScene) Reset() {
 	g.exhaust = nil
 	g.space.RemoveAll()
 	g.space.Add(g.player.playerObj)
+}
+
+func (g *GameScene) isLevelComplete(state *State) {
+	if g.meteorCount >= g.meteorsPerLevel && len(g.meteors) == 0 {
+		g.baseVelocity = baseMeteorVelocity
+		g.currentLevel++
+
+		if g.currentLevel%5 == 0 {
+			if g.player.livesRemaining < 6 {
+				g.player.livesRemaining++
+
+				x := float64(20 + len(g.player.lifeIndicators)*50)
+				y := 20.0
+
+				g.player.lifeIndicators = append(g.player.lifeIndicators, NewLifeIndicator(Vector{
+					X: x,
+					Y: y,
+				}))
+			}
+		}
+
+		g.beatWaitTime = baseBeatWaitTime
+
+		state.SceneManager.GoToScene(&LevelStartsScene{
+			game:           g,
+			nextLevelTimer: NewTimer(time.Second * 2),
+			stars:          GenerateStars(numberOfStars),
+		})
+	}
 }
