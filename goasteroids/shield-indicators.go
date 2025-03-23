@@ -14,19 +14,16 @@ type ShieldIndicator struct {
 }
 
 func NewShieldIndicator(pos Vector) *ShieldIndicator {
-	sprite := assets.ShieldIndicator
-
 	return &ShieldIndicator{
 		position: pos,
-		rotation: 0,
-		sprite:   sprite,
+		sprite:   assets.ShieldIndicator,
 	}
 }
 
-func (s *ShieldIndicator) Update() {}
+func (si *ShieldIndicator) Update() {}
 
-func (s *ShieldIndicator) Draw(screen *ebiten.Image) {
-	bounds := s.sprite.Bounds()
+func (si *ShieldIndicator) Draw(screen *ebiten.Image) {
+	bounds := si.sprite.Bounds()
 	halfW := float64(bounds.Dx()) / 2
 	halfH := float64(bounds.Dy()) / 2
 
@@ -34,8 +31,8 @@ func (s *ShieldIndicator) Draw(screen *ebiten.Image) {
 	op.GeoM.Translate(halfW, halfH)
 	cm := colorm.ColorM{}
 	cm.Scale(1.0, 1.0, 1.0, 0.5)
-	op.GeoM.Translate(s.position.X, s.position.Y)
+	op.GeoM.Translate(si.position.X, si.position.Y)
 
-	colorm.DrawImage(screen, s.sprite, cm, op)
+	colorm.DrawImage(screen, si.sprite, cm, op)
 
 }

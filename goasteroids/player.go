@@ -44,9 +44,9 @@ type Player struct {
 	dyingCounter     int
 	livesRemaining   int
 	lifeIndicators   []*LifeIndicator
-	shieldIndicators []*ShieldIndicator
 	shieldTimer      *Timer
 	shieldsRemaining int
+	shieldIndicators []*ShieldIndicator
 }
 
 func NewPlayer(game *GameScene) *Player {
@@ -65,7 +65,7 @@ func NewPlayer(game *GameScene) *Player {
 	/* create collision object */
 	playerObj := resolv.NewCircle(pos.X, pos.Y, float64(sprite.Bounds().Dx()/2))
 
-	/* create life indicators*/
+	/* setup life indicators*/
 	var lifeIndicators []*LifeIndicator
 	var xPosition = 20.0
 
@@ -74,8 +74,20 @@ func NewPlayer(game *GameScene) *Player {
 			X: xPosition,
 			Y: 20,
 		})
-
 		lifeIndicators = append(lifeIndicators, li)
+		xPosition += 50.0
+	}
+
+	/* setup shield indicators*/
+	var shieldIndicators []*ShieldIndicator
+	xPosition = 45.0
+
+	for range numberOfShields {
+		si := NewShieldIndicator(Vector{
+			X: xPosition,
+			Y: 60,
+		})
+		shieldIndicators = append(shieldIndicators, si)
 		xPosition += 50.0
 	}
 
@@ -94,6 +106,7 @@ func NewPlayer(game *GameScene) *Player {
 		livesRemaining:   numberOfLives,
 		lifeIndicators:   lifeIndicators,
 		shieldsRemaining: numberOfShields,
+		shieldIndicators: shieldIndicators,
 	}
 
 	p.playerObj.SetPosition(pos.X, pos.Y)
@@ -328,6 +341,7 @@ func (p *Player) useShield() {
 		p.shieldTimer = NewTimer(shieldDuration)
 		p.game.shield = NewShield(Vector{}, p.rotation, p.game)
 		p.shieldsRemaining--
+		p.shieldIndicators = p.shieldIndicators[:len(p.shieldIndicators)-1]
 	}
 
 	if p.shieldTimer != nil && p.isShielded {

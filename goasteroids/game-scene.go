@@ -185,6 +185,13 @@ func (g *GameScene) Draw(screen *ebiten.Image) {
 		}
 	}
 
+	/* draw shield indicators */
+	if len(g.player.shieldIndicators) > 0 {
+		for _, si := range g.player.shieldIndicators {
+			si.Draw(screen)
+		}
+	}
+
 	/* draw score */
 	textToDraw := fmt.Sprintf("%06d", g.score)
 	op := &text.DrawOptions{
@@ -312,7 +319,8 @@ func (g *GameScene) isPlayerCollidingWithMeteor() {
 				}
 				break
 			} else {
-				/* bounce meteor*/
+				/* bounce meteor if shielded */
+				g.bounceMeteor(m)
 			}
 		}
 	}
@@ -361,6 +369,23 @@ func (g *GameScene) isMeteorHitByPlayerLaser() {
 			}
 		}
 	}
+}
+
+func (g *GameScene) bounceMeteor(m *Meteor) {
+	direction := Vector{
+		X: (ScreenWidth/2 - m.position.X) * -1,
+		Y: (ScreenHeight/2 - m.position.Y) * -1,
+	}
+
+	normalized := direction.Normalize()
+	velocity := g.baseVelocity
+
+	movement := Vector{
+		X: normalized.X * velocity,
+		Y: normalized.Y * velocity,
+	}
+
+	m.movement = movement
 }
 
 func (g *GameScene) cleanupMeteorsAndAliens() {
@@ -430,6 +455,7 @@ func (g *GameScene) isPlayerDead(state *State) {
 		lifeSlice := g.player.lifeIndicators[:len(g.player.lifeIndicators)-1]
 		stars := g.stars
 		shieldsRemaining := g.player.shieldsRemaining
+		shieldIndicatorSlice := g.player.shieldIndicators
 
 		g.Reset()
 		g.player.livesRemaining = livesRemaining
@@ -437,25 +463,9 @@ func (g *GameScene) isPlayerDead(state *State) {
 		g.player.lifeIndicators = lifeSlice
 		g.stars = stars
 		g.player.shieldsRemaining = shieldsRemaining
+		g.player.shieldIndicators = shieldIndicatorSlice
 	}
 
-}
-
-func (g *GameScene) Reset() {
-	g.player = NewPlayer(g)
-	g.meteors = make(map[int]*Meteor)
-	g.meteorCount = 0
-	g.lasers = make(map[int]*Laser)
-	g.laserCount = 0
-	g.score = 0
-	g.baseVelocity = baseMeteorVelocity
-	g.velocityTimer.Reset()
-	g.meteorSpawnTimer.Reset()
-	g.playerIsDead = false
-	g.exhaust = nil
-	g.space.RemoveAll()
-	g.space.Add(g.player.playerObj)
-	g.player.shieldsRemaining = numberOfShields
 }
 
 func (g *GameScene) isLevelComplete(state *State) {
@@ -485,4 +495,22 @@ func (g *GameScene) isLevelComplete(state *State) {
 			stars:          GenerateStars(numberOfStars),
 		})
 	}
+}
+
+func (g *GameScene) Reset() {
+	g.player = NewPlayer(g)
+	g.meteors = make(map[int]*Meteor)
+	g.meteorCount = 0
+	g.lasers = make(map[int]*Laser)
+	g.laserCount = 0
+	g.score = 0
+	g.baseVelocity = baseMeteorVelocity
+	g.velocityTimer.Reset()
+	g.meteorSpawnTimer.Reset()
+	g.playerIsDead = false
+	g.exhaust = nil
+	g.space.RemoveAll()
+	g.space.Add(g.player.playerObj)
+	g.player.shieldsRemaining = numberOfShields
+	g.player.isShielded = false
 }
