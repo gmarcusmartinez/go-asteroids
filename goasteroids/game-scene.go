@@ -192,6 +192,11 @@ func (g *GameScene) Draw(screen *ebiten.Image) {
 		}
 	}
 
+	/* draw hyperspace indicator */
+	if g.player.hyperspaceTimer == nil || g.player.hyperspaceTimer.IsReady() {
+		g.player.hyperspaceIndicator.Draw(screen)
+	}
+
 	/* draw score */
 	textToDraw := fmt.Sprintf("%06d", g.score)
 	op := &text.DrawOptions{

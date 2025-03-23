@@ -3,6 +3,7 @@ package goasteroids
 import (
 	"go-asteroids/assets"
 	"math"
+	"math/rand"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -23,30 +24,33 @@ const (
 	numberOfLives        = 3
 	numberOfShields      = 3
 	shieldDuration       = time.Second * 6
+	hyperspaceCooldown   = time.Second * 10
 )
 
 var currentAcceleration float64
 var shotsFired = 0
 
 type Player struct {
-	game             *GameScene
-	sprite           *ebiten.Image
-	rotation         float64
-	position         Vector
-	playerVelocity   float64
-	playerObj        *resolv.Circle
-	shootCooldown    *Timer
-	burstCooldown    *Timer
-	isShielded       bool
-	isDying          bool
-	isDead           bool
-	dyingTimer       *Timer
-	dyingCounter     int
-	livesRemaining   int
-	lifeIndicators   []*LifeIndicator
-	shieldTimer      *Timer
-	shieldsRemaining int
-	shieldIndicators []*ShieldIndicator
+	game                *GameScene
+	sprite              *ebiten.Image
+	rotation            float64
+	position            Vector
+	playerVelocity      float64
+	playerObj           *resolv.Circle
+	shootCooldown       *Timer
+	burstCooldown       *Timer
+	isShielded          bool
+	isDying             bool
+	isDead              bool
+	dyingTimer          *Timer
+	dyingCounter        int
+	livesRemaining      int
+	lifeIndicators      []*LifeIndicator
+	shieldTimer         *Timer
+	shieldsRemaining    int
+	shieldIndicators    []*ShieldIndicator
+	hyperspaceIndicator *HyperspaceIndicator
+	hyperspaceTimer     *Timer
 }
 
 func NewPlayer(game *GameScene) *Player {
@@ -92,21 +96,23 @@ func NewPlayer(game *GameScene) *Player {
 	}
 
 	p := &Player{
-		sprite:           sprite,
-		game:             game,
-		position:         pos,
-		playerObj:        playerObj,
-		shootCooldown:    NewTimer(shootCooldown),
-		burstCooldown:    NewTimer(burstCooldown),
-		isShielded:       false,
-		isDying:          false,
-		isDead:           false,
-		dyingTimer:       NewTimer(dyingAnimationAmount),
-		dyingCounter:     0,
-		livesRemaining:   numberOfLives,
-		lifeIndicators:   lifeIndicators,
-		shieldsRemaining: numberOfShields,
-		shieldIndicators: shieldIndicators,
+		sprite:              sprite,
+		game:                game,
+		position:            pos,
+		playerObj:           playerObj,
+		shootCooldown:       NewTimer(shootCooldown),
+		burstCooldown:       NewTimer(burstCooldown),
+		isShielded:          false,
+		isDying:             false,
+		isDead:              false,
+		dyingTimer:          NewTimer(dyingAnimationAmount),
+		dyingCounter:        0,
+		livesRemaining:      numberOfLives,
+		lifeIndicators:      lifeIndicators,
+		shieldsRemaining:    numberOfShields,
+		shieldIndicators:    shieldIndicators,
+		hyperspaceIndicator: NewHyperspaceIndicator(Vector{X: 37.0, Y: 95.0}),
+		hyperspaceTimer:     nil,
 	}
 
 	p.playerObj.SetPosition(pos.X, pos.Y)
@@ -145,17 +151,30 @@ func (p *Player) Update() {
 	}
 
 	p.accelerate()
+
 	p.useShield()
+
 	p.isDoneAccelerating()
+
 	p.reverse()
+
 	p.isDoneReversing()
+
 	p.updateExhaustSprite()
 
 	p.playerObj.SetPosition(p.position.X, p.position.Y)
+
 	p.burstCooldown.Update()
+
 	p.shootCooldown.Update()
 
 	p.fireLasers()
+
+	p.hyperspace()
+
+	if p.hyperspaceTimer != nil {
+		p.hyperspaceTimer.Update()
+	}
 }
 
 func (p *Player) accelerate() {
@@ -282,6 +301,30 @@ func (p *Player) fireLasers() {
 			p.burstCooldown.Reset()
 			shotsFired = 0
 		}
+	}
+}
+
+func (p *Player) hyperspace() {
+	if ebiten.IsKeyPressed(ebiten.KeyH) && (p.hyperspaceTimer == nil || p.hyperspaceTimer.IsReady()) {
+		var randX, randY int
+
+		for {
+			randX = rand.Intn(ScreenWidth)
+			randY = rand.Intn(ScreenHeight)
+			collision := p.game.checkCollision(p.playerObj, nil)
+			if !collision {
+				break
+			}
+		}
+
+		p.position.X = float64(randX)
+		p.position.Y = float64(randY)
+
+		if p.hyperspaceTimer == nil {
+			p.hyperspaceTimer = NewTimer(hyperspaceCooldown)
+		}
+
+		p.hyperspaceTimer.Reset()
 	}
 }
 
