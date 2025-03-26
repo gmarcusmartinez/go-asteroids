@@ -25,6 +25,7 @@ const (
 	numberOfShields      = 3
 	shieldDuration       = time.Second * 6
 	hyperspaceCooldown   = time.Second * 10
+	driftTime            = time.Second * 30
 )
 
 var currentAcceleration float64
@@ -51,6 +52,8 @@ type Player struct {
 	shieldIndicators    []*ShieldIndicator
 	hyperspaceIndicator *HyperspaceIndicator
 	hyperspaceTimer     *Timer
+	driftAngle          float64
+	driftTimer          *Timer
 }
 
 func NewPlayer(game *GameScene) *Player {
@@ -113,6 +116,7 @@ func NewPlayer(game *GameScene) *Player {
 		shieldIndicators:    shieldIndicators,
 		hyperspaceIndicator: NewHyperspaceIndicator(Vector{X: 37.0, Y: 95.0}),
 		hyperspaceTimer:     nil,
+		driftTimer:          nil,
 	}
 
 	p.playerObj.SetPosition(pos.X, pos.Y)
@@ -156,6 +160,10 @@ func (p *Player) Update() {
 
 	p.isDoneAccelerating()
 
+	p.isDrifting()
+
+	p.isDriftFinished()
+
 	p.reverse()
 
 	p.isDoneReversing()
@@ -181,6 +189,8 @@ func (p *Player) accelerate() {
 	if !ebiten.IsKeyPressed(ebiten.KeyUp) {
 		return
 	}
+
+	p.driftTimer = nil
 
 	p.keepOnScreen()
 
@@ -216,6 +226,47 @@ func (p *Player) isDoneAccelerating() {
 		if p.game.thrustPlayer.IsPlaying() {
 			p.game.thrustPlayer.Pause()
 		}
+
+		/* figure out velocity */
+		if p.playerVelocity < currentAcceleration*10 {
+			p.playerVelocity = currentAcceleration*10 - 5.0
+		}
+
+		if p.playerVelocity < 0 {
+			p.playerVelocity = 0
+		}
+
+		currentAcceleration = 0
+
+		/* create a drift timer */
+		p.driftTimer = NewTimer(driftTime)
+
+		/* save angle of rotation */
+		p.driftAngle = p.rotation
+
+	}
+}
+
+func (p *Player) isDrifting() {
+	if p.driftTimer == nil {
+		return
+	}
+
+	p.keepOnScreen()
+	p.driftTimer.Update()
+
+	decelerationSpeed := p.playerVelocity / float64(ebiten.TPS()) * 4
+
+	p.position.X += math.Sin(p.driftAngle) * decelerationSpeed
+	p.position.Y += math.Cos(p.driftAngle) * -decelerationSpeed
+	p.playerObj.SetPosition(p.position.X, p.position.Y)
+
+}
+
+func (p *Player) isDriftFinished() {
+	if p.driftTimer != nil && p.driftTimer.IsReady() {
+		p.driftTimer = nil
+		p.playerVelocity = 0
 	}
 }
 
@@ -223,6 +274,8 @@ func (p *Player) reverse() {
 	if !ebiten.IsKeyPressed(ebiten.KeyDown) {
 		return
 	}
+
+	p.driftTimer = nil
 
 	p.keepOnScreen()
 	dx := math.Sin(p.rotation) * -3
