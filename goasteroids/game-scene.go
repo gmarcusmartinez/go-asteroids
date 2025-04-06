@@ -178,6 +178,12 @@ func (g *GameScene) Update(state *State) error {
 
 	g.isPlayerCollidingWithMeteor()
 
+	g.isPlayerCollidingWithAlien()
+
+	g.isPlayerHitByAlienLaser()
+
+	g.isAlienHitByPlayerLaser()
+
 	g.isMeteorHitByPlayerLaser()
 
 	g.cleanupMeteorsAndAliens()
@@ -441,6 +447,57 @@ func (g *GameScene) isPlayerCollidingWithMeteor() {
 	}
 }
 
+func (g *GameScene) isPlayerCollidingWithAlien() {
+	for _, a := range g.aliens {
+		if a.alienObj.IsIntersecting(g.player.playerObj) {
+			if !a.game.player.isShielded {
+				/* trigger dying animation */
+				a.game.player.isDying = true
+				/* play explosion sound */
+				if !a.game.explosionPlayer.IsPlaying() {
+					_ = a.game.explosionPlayer.Rewind()
+					a.game.explosionPlayer.Play()
+				}
+			}
+		}
+	}
+}
+
+func (g *GameScene) isPlayerHitByAlienLaser() {
+	for _, al := range g.alienLasers {
+		if al.laserObj.IsIntersecting(g.player.playerObj) {
+			if !g.player.isShielded {
+				/* trigger dying animation */
+				g.player.isDying = true
+				if !g.explosionPlayer.IsPlaying() {
+					_ = g.explosionPlayer.Rewind()
+					g.explosionPlayer.Play()
+				}
+			}
+		}
+	}
+}
+
+func (g *GameScene) isAlienHitByPlayerLaser() {
+	for _, a := range g.aliens {
+		for _, l := range g.lasers {
+			if a.alienObj.IsIntersecting(l.laserObj) {
+				laserData := l.laserObj.Data().(*ObjectData)
+				delete(g.alienLasers, laserData.index)
+				g.space.Remove(l.laserObj)
+				a.sprite = g.explosionSprite
+				g.score = g.score + 50
+
+				/* play explosion sound*/
+				if !g.explosionPlayer.IsPlaying() {
+					_ = g.explosionPlayer.Rewind()
+					g.explosionPlayer.Play()
+				}
+			}
+		}
+	}
+}
+
 func (g *GameScene) isMeteorHitByPlayerLaser() {
 	for _, m := range g.meteors {
 		for _, l := range g.lasers {
@@ -506,12 +563,23 @@ func (g *GameScene) bounceMeteor(m *Meteor) {
 func (g *GameScene) cleanupMeteorsAndAliens() {
 	g.cleanupTimer.Update()
 	if g.cleanupTimer.IsReady() {
+
+		/* clean up shot meteors */
 		for i, m := range g.meteors {
 			if m.sprite == g.explosionSprite || m.sprite == g.explosionSmallSprite {
 				delete(g.meteors, i)
 				g.space.Remove(m.meteorObj)
 			}
 		}
+
+		/* clean up dead aliens */
+		for i, a := range g.aliens {
+			if a.sprite == g.explosionSprite || a.sprite == g.explosionSmallSprite {
+				delete(g.aliens, i)
+				g.space.Remove(a.alienObj)
+			}
+		}
+
 		g.cleanupTimer.Reset()
 	}
 }
@@ -681,4 +749,8 @@ func (g *GameScene) Reset() {
 	g.space.Add(g.player.playerObj)
 	g.player.shieldsRemaining = numberOfShields
 	g.player.isShielded = false
+	g.aliens = make(map[int]*Alien)
+	g.alienCount = 0
+	g.alienLasers = make(map[int]*AlienLaser)
+	g.alienLaserCount = 0
 }
