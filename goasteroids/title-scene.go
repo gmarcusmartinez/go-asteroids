@@ -75,6 +75,4 @@ func init() {
 
 	highScore = hs
 	originalHighScore = hs
-
-	log.Println("Hello")
 }

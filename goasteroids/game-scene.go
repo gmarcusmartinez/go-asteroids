@@ -5,6 +5,7 @@ import (
 	"go-asteroids/assets"
 	"image/color"
 	"log"
+	"math"
 	"math/rand"
 	"time"
 
@@ -120,9 +121,11 @@ func NewGameScene() *GameScene {
 	g.explosionPlayer = explosionPlayer
 
 	beatOnePlayer, _ := g.audioContext.NewPlayer(assets.BeatOneSound)
+	beatOnePlayer.SetVolume(0.5)
 	g.beatOnePlayer = beatOnePlayer
 
 	beatTwoPlayer, _ := g.audioContext.NewPlayer(assets.BeatTwoSound)
+	beatTwoPlayer.SetVolume(0.5)
 	g.beatTwoPlayer = beatTwoPlayer
 
 	shieldsUpPlayer, _ := g.audioContext.NewPlayer(assets.ShieldSound)
@@ -155,6 +158,12 @@ func (g *GameScene) Update(state *State) error {
 
 	for _, a := range g.aliens {
 		a.Update()
+	}
+
+	g.letAliensAttack()
+
+	for _, al := range g.alienLasers {
+		al.Update()
 	}
 
 	for _, m := range g.meteors {
@@ -229,6 +238,11 @@ func (g *GameScene) Draw(screen *ebiten.Image) {
 	/* draw aliens  */
 	for _, a := range g.aliens {
 		a.Draw(screen)
+	}
+
+	/* draw aliens lasers  */
+	for _, al := range g.alienLasers {
+		al.Draw(screen)
 	}
 
 	/* draw hyperspace indicator */
@@ -344,6 +358,10 @@ func (g *GameScene) spawnMeteors() {
 
 func (g *GameScene) spawnAliens() {
 	g.alienSpawnTimer.Update()
+
+	if len(g.aliens) != 0 {
+		return
+	}
 
 	if g.alienSpawnTimer.IsReady() {
 		g.alienSpawnTimer.Reset()
@@ -495,6 +513,59 @@ func (g *GameScene) cleanupMeteorsAndAliens() {
 			}
 		}
 		g.cleanupTimer.Reset()
+	}
+}
+
+func (g *GameScene) letAliensAttack() {
+	if len(g.aliens) > 0 {
+		if !g.alienSoundPlayer.IsPlaying() {
+			_ = g.alienSoundPlayer.Rewind()
+			g.alienSoundPlayer.Play()
+		}
+
+		/* update the alien attack timer */
+		g.alienAttackTimer.Update()
+
+		/* if timer reached reset timer and attack */
+		if g.alienAttackTimer.IsReady() {
+			g.alienAttackTimer.Reset()
+
+			for _, a := range g.aliens {
+				bounds := a.sprite.Bounds()
+				halfW := float64(bounds.Dx()) / 2
+				halfH := float64(bounds.Dy()) / 2
+
+				var degreesRadian float64
+
+				if !a.isIntelligent {
+					/* fire in a random direction */
+					degreesRadian = rand.Float64() * (math.Pi * 2)
+				} else {
+					/* fire with some accuracy */
+					degreesRadian = math.Atan2(g.player.position.Y-a.position.Y, g.player.position.X-a.position.X)
+					degreesRadian = degreesRadian - math.Pi*-0.5
+				}
+
+				r := degreesRadian
+
+				offsetX := float64(a.sprite.Bounds().Dx() - int(halfW))
+				offsetY := float64(a.sprite.Bounds().Dy() - int(halfH))
+
+				spawnPos := Vector{
+					X: a.position.X + halfW + math.Sin(r) - offsetX,
+					Y: a.position.Y + halfH + math.Cos(r) - offsetY,
+				}
+
+				laser := NewAlienLaser(spawnPos, r)
+				g.alienLaserCount++
+				g.alienLasers[g.alienLaserCount] = laser
+
+				if !g.alienLaserPlayer.IsPlaying() {
+					_ = g.alienLaserPlayer.Rewind()
+					g.alienLaserPlayer.Play()
+				}
+			}
+		}
 	}
 }
 

@@ -9,7 +9,6 @@ import (
 
 type ShieldIndicator struct {
 	position Vector
-	rotation float64
 	sprite   *ebiten.Image
 }
 
