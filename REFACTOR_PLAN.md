@@ -127,11 +127,12 @@ handlers). Rough surface: `Meteor{Sprite,Position,Movement,Obj}`,
 - Risk: **low-medium** — independent of directories but unblocks a clean split.
 
 ### Phase 3 — Extract `entity` package
-- [ ] Move pure entities first: `Star`, `Exhaust`, `AlienLaser`, 3× indicators (no interface needed) — commit separately
-- [ ] Add `entity.Scene` interface + semantic audio methods (Fix 1)
-- [ ] Move `Meteor`, `Alien`, `Laser`, `Shield`, `Player`; export fields / add methods (Fix 2); swap `*GameScene` → `entity.Scene`
-- [ ] `GameScene` implements `entity.Scene`
+- [x] **3.1** Move pure entities first: `Star`, `Exhaust`, `AlienLaser`, 3× indicators (no interface needed) — committed separately (2458b62). Along the way: `AlienLaser.Position`/`LaserObj` exported (scene reach-in), `engine.MaxAcceleration` added as the shared thrust/exhaust const, `exhaustSpawnOffset` relocated to its sole user `player.go`.
+- [ ] **3.2** Add `entity.Scene` interface + semantic audio methods (Fix 1)
+- [ ] **3.3** Move `Meteor`, `Alien`, `Laser`, `Shield`, `Player`; export fields / add methods (Fix 2); swap `*GameScene` → `entity.Scene`
+- [ ] **3.4** `GameScene` implements `entity.Scene`
 - Risk: **medium-high**, concentrated in `Player`. Isolate the risky part in its own commit.
+- Note: `Meteor` no longer holds any scene reference (Phase 2), so it can move without the interface — likely bundle it with 3.1-style pure moves.
 
 ### Phase 4 — Extract `scene` and `game`
 - [ ] `internal/scene` ← 4 scenes + `scene-manager.go`
