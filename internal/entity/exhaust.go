@@ -1,4 +1,4 @@
-package goasteroids
+package entity
 
 import (
 	"go-asteroids/assets"
@@ -6,10 +6,6 @@ import (
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
-)
-
-const (
-	exhaustSpawnOffset = -50.0
 )
 
 type Exhaust struct {
@@ -39,7 +35,7 @@ func NewExhaust(pos engine.Vector, rotation float64) *Exhaust {
 }
 
 func (e *Exhaust) Update() {
-	speed := maxAcceleration / float64(ebiten.TPS())
+	speed := engine.MaxAcceleration / float64(ebiten.TPS())
 	e.position.X += math.Sin(e.rotation) * speed
 	e.position.Y += math.Cos(e.rotation) * -speed
 }

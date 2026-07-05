@@ -1,4 +1,4 @@
-package goasteroids
+package entity
 
 import (
 	"go-asteroids/assets"
@@ -14,10 +14,10 @@ const (
 )
 
 type AlienLaser struct {
-	position engine.Vector
+	Position engine.Vector
 	rotation float64
 	sprite   *ebiten.Image
-	laserObj *resolv.ConvexPolygon
+	LaserObj *resolv.ConvexPolygon
 }
 
 func NewAlienLaser(pos engine.Vector, rotation float64) *AlienLaser {
@@ -34,15 +34,15 @@ func NewAlienLaser(pos engine.Vector, rotation float64) *AlienLaser {
 
 	/* create an alien laser obj */
 	al := &AlienLaser{
-		position: pos,
+		Position: pos,
 		rotation: rotation,
 		sprite:   sprite,
-		laserObj: resolv.NewRectangle(pos.X, pos.Y, float64(sprite.Bounds().Dx()), float64(sprite.Bounds().Dy())),
+		LaserObj: resolv.NewRectangle(pos.X, pos.Y, float64(sprite.Bounds().Dx()), float64(sprite.Bounds().Dy())),
 	}
 
 	/* set the position of the collision obj */
-	al.laserObj.SetPosition(pos.X, pos.Y)
-	al.laserObj.Tags().Set(engine.TagLaser)
+	al.LaserObj.SetPosition(pos.X, pos.Y)
+	al.LaserObj.Tags().Set(engine.TagLaser)
 
 	return al
 
@@ -51,10 +51,10 @@ func NewAlienLaser(pos engine.Vector, rotation float64) *AlienLaser {
 func (al *AlienLaser) Update() {
 	speed := alienLaserSpeedPerSecond / float64(ebiten.TPS())
 
-	al.position.X += math.Sin(al.rotation) * speed
-	al.position.Y += math.Cos(al.rotation) * -speed
+	al.Position.X += math.Sin(al.rotation) * speed
+	al.Position.Y += math.Cos(al.rotation) * -speed
 
-	al.laserObj.SetPosition(al.position.X, al.position.Y)
+	al.LaserObj.SetPosition(al.Position.X, al.Position.Y)
 }
 
 func (al *AlienLaser) Draw(screen *ebiten.Image) {
@@ -65,7 +65,7 @@ func (al *AlienLaser) Draw(screen *ebiten.Image) {
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(-halfW, -halfH)
 	op.GeoM.Rotate(al.rotation)
-	op.GeoM.Translate(al.position.X, al.position.Y)
+	op.GeoM.Translate(al.Position.X, al.Position.Y)
 
 	screen.DrawImage(al.sprite, op)
 

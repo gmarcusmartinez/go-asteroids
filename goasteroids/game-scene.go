@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go-asteroids/assets"
 	"go-asteroids/internal/engine"
+	"go-asteroids/internal/entity"
 	"go-asteroids/internal/highscore"
 	"image/color"
 	"log"
@@ -49,7 +50,7 @@ type GameScene struct {
 	playerIsDead         bool
 	audioContext         *audio.Context
 	thrustPlayer         *audio.Player
-	exhaust              *Exhaust
+	exhaust              *entity.Exhaust
 	laserOnePlayer       *audio.Player
 	laserTwoPlayer       *audio.Player
 	laserThreePlayer     *audio.Player
@@ -59,7 +60,7 @@ type GameScene struct {
 	beatTimer            *engine.Timer
 	beatWaitTime         int
 	playBeatOne          bool
-	stars                []*Star
+	stars                []*entity.Star
 	currentLevel         int
 	shield               *Shield
 	shieldsUpPlayer      *audio.Player
@@ -67,7 +68,7 @@ type GameScene struct {
 	alienCount           int
 	alienLaserCount      int
 	alienLaserPlayer     *audio.Player
-	alienLasers          map[int]*AlienLaser
+	alienLasers          map[int]*entity.AlienLaser
 	alienSoundPlayer     *audio.Player
 	alienSpawnTimer      *engine.Timer
 	aliens               map[int]*Alien
@@ -91,11 +92,11 @@ func NewGameScene() *GameScene {
 		cleanupTimer:         engine.NewTimer(cleanupExplosionTime),
 		beatTimer:            engine.NewTimer(2 * time.Second),
 		beatWaitTime:         baseBeatWaitTime,
-		stars:                GenerateStars(numberOfStars),
+		stars:                entity.GenerateStars(numberOfStars),
 		currentLevel:         1,
 		aliens:               make(map[int]*Alien),
 		alienCount:           0,
-		alienLasers:          make(map[int]*AlienLaser),
+		alienLasers:          make(map[int]*entity.AlienLaser),
 		alienLaserCount:      0,
 		alienSpawnTimer:      engine.NewTimer(alienSpawnTime),
 		alienAttackTimer:     engine.NewTimer(alienAttackTime),
@@ -420,11 +421,11 @@ func (g *GameScene) removeOffscreenLasers() {
 	}
 
 	for i, al := range g.alienLasers {
-		if al.position.X > engine.ScreenWidth+200 ||
-			al.position.Y > engine.ScreenHeight+200 ||
-			al.position.X < -200 ||
-			al.position.Y < -200 {
-			g.space.Remove(al.laserObj)
+		if al.Position.X > engine.ScreenWidth+200 ||
+			al.Position.Y > engine.ScreenHeight+200 ||
+			al.Position.X < -200 ||
+			al.Position.Y < -200 {
+			g.space.Remove(al.LaserObj)
 			delete(g.alienLasers, i)
 
 		}
@@ -477,7 +478,7 @@ func (g *GameScene) isPlayerCollidingWithAlien() {
 
 func (g *GameScene) isPlayerHitByAlienLaser() {
 	for _, al := range g.alienLasers {
-		if al.laserObj.IsIntersecting(g.player.playerObj) {
+		if al.LaserObj.IsIntersecting(g.player.playerObj) {
 			if !g.player.isShielded {
 				/* trigger dying animation */
 				g.player.isDying = true
@@ -636,7 +637,7 @@ func (g *GameScene) letAliensAttack() {
 					Y: a.position.Y + halfH + math.Cos(r) - offsetY,
 				}
 
-				laser := NewAlienLaser(spawnPos, r)
+				laser := entity.NewAlienLaser(spawnPos, r)
 				g.alienLaserCount++
 				g.alienLasers[g.alienLaserCount] = laser
 
@@ -694,7 +695,7 @@ func (g *GameScene) isPlayerDead(state *State) {
 			game:        g,
 			meteors:     make(map[int]*Meteor),
 			meteorCount: 5,
-			stars:       GenerateStars(numberOfStars),
+			stars:       entity.GenerateStars(numberOfStars),
 		})
 	} else {
 		/* decrement lives remaining */
@@ -728,7 +729,7 @@ func (g *GameScene) isLevelComplete(state *State) {
 				x := float64(20 + len(g.player.lifeIndicators)*50)
 				y := 20.0
 
-				g.player.lifeIndicators = append(g.player.lifeIndicators, NewLifeIndicator(engine.Vector{
+				g.player.lifeIndicators = append(g.player.lifeIndicators, entity.NewLifeIndicator(engine.Vector{
 					X: x,
 					Y: y,
 				}))
@@ -740,7 +741,7 @@ func (g *GameScene) isLevelComplete(state *State) {
 		state.SceneManager.GoToScene(&LevelStartsScene{
 			game:           g,
 			nextLevelTimer: engine.NewTimer(time.Second * 2),
-			stars:          GenerateStars(numberOfStars),
+			stars:          entity.GenerateStars(numberOfStars),
 		})
 	}
 }
@@ -763,6 +764,6 @@ func (g *GameScene) Reset() {
 	g.player.isShielded = false
 	g.aliens = make(map[int]*Alien)
 	g.alienCount = 0
-	g.alienLasers = make(map[int]*AlienLaser)
+	g.alienLasers = make(map[int]*entity.AlienLaser)
 	g.alienLaserCount = 0
 }

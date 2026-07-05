@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go-asteroids/assets"
 	"go-asteroids/internal/engine"
+	"go-asteroids/internal/entity"
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -14,7 +15,7 @@ import (
 type LevelStartsScene struct {
 	game           *GameScene
 	nextLevelTimer *engine.Timer
-	stars          []*Star
+	stars          []*entity.Star
 }
 
 func (l *LevelStartsScene) Draw(screen *ebiten.Image) {

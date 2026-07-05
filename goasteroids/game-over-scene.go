@@ -3,6 +3,7 @@ package goasteroids
 import (
 	"go-asteroids/assets"
 	"go-asteroids/internal/engine"
+	"go-asteroids/internal/entity"
 	"image/color"
 	"os"
 
@@ -15,7 +16,7 @@ type GameOverScene struct {
 	game        *GameScene
 	meteors     map[int]*Meteor
 	meteorCount int
-	stars       []*Star
+	stars       []*entity.Star
 }
 
 func (o *GameOverScene) Draw(screen *ebiten.Image) {

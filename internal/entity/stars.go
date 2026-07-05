@@ -1,4 +1,4 @@
-package goasteroids
+package entity
 
 import (
 	"go-asteroids/internal/engine"

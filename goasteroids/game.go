@@ -2,6 +2,7 @@ package goasteroids
 
 import (
 	"go-asteroids/internal/engine"
+	"go-asteroids/internal/entity"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -22,7 +23,7 @@ func (g *Game) Update() error {
 		meteors := make(map[int]*Meteor)
 		g.sceneManager.GoToScene(&TitleScene{
 			meteors: meteors,
-			stars:   GenerateStars(numberOfStars),
+			stars:   entity.GenerateStars(numberOfStars),
 		})
 	}
 

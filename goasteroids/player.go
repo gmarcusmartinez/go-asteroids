@@ -3,6 +3,7 @@ package goasteroids
 import (
 	"go-asteroids/assets"
 	"go-asteroids/internal/engine"
+	"go-asteroids/internal/entity"
 	"math"
 	"math/rand"
 	"time"
@@ -14,7 +15,7 @@ import (
 
 const (
 	rotationPerSecond    = math.Pi
-	maxAcceleration      = 8.0
+	exhaustSpawnOffset   = -50.0
 	shootCooldown        = time.Millisecond * 150
 	burstCooldown        = time.Millisecond * 500
 	laserSpawnOffset     = 50.0
@@ -44,11 +45,11 @@ type Player struct {
 	dyingTimer          *engine.Timer
 	dyingCounter        int
 	livesRemaining      int
-	lifeIndicators      []*LifeIndicator
+	lifeIndicators      []*entity.LifeIndicator
 	shieldTimer         *engine.Timer
 	shieldsRemaining    int
-	shieldIndicators    []*ShieldIndicator
-	hyperspaceIndicator *HyperspaceIndicator
+	shieldIndicators    []*entity.ShieldIndicator
+	hyperspaceIndicator *entity.HyperspaceIndicator
 	hyperspaceTimer     *engine.Timer
 	driftAngle          float64
 	driftTimer          *engine.Timer
@@ -71,11 +72,11 @@ func NewPlayer(game *GameScene) *Player {
 	playerObj := resolv.NewCircle(pos.X, pos.Y, float64(sprite.Bounds().Dx()/2))
 
 	/* setup life indicators*/
-	var lifeIndicators []*LifeIndicator
+	var lifeIndicators []*entity.LifeIndicator
 	var xPosition = 20.0
 
 	for range numberOfLives {
-		li := NewLifeIndicator(engine.Vector{
+		li := entity.NewLifeIndicator(engine.Vector{
 			X: xPosition,
 			Y: 20,
 		})
@@ -84,11 +85,11 @@ func NewPlayer(game *GameScene) *Player {
 	}
 
 	/* setup shield indicators*/
-	var shieldIndicators []*ShieldIndicator
+	var shieldIndicators []*entity.ShieldIndicator
 	xPosition = 45.0
 
 	for range numberOfShields {
-		si := NewShieldIndicator(engine.Vector{
+		si := entity.NewShieldIndicator(engine.Vector{
 			X: xPosition,
 			Y: 60,
 		})
@@ -112,7 +113,7 @@ func NewPlayer(game *GameScene) *Player {
 		lifeIndicators:      lifeIndicators,
 		shieldsRemaining:    numberOfShields,
 		shieldIndicators:    shieldIndicators,
-		hyperspaceIndicator: NewHyperspaceIndicator(engine.Vector{X: 37.0, Y: 95.0}),
+		hyperspaceIndicator: entity.NewHyperspaceIndicator(engine.Vector{X: 37.0, Y: 95.0}),
 		hyperspaceTimer:     nil,
 		driftTimer:          nil,
 	}
@@ -192,7 +193,7 @@ func (p *Player) accelerate() {
 
 	p.keepOnScreen()
 
-	if p.currentAcceleration < maxAcceleration {
+	if p.currentAcceleration < engine.MaxAcceleration {
 		p.currentAcceleration = p.playerVelocity + 4
 	}
 
@@ -421,7 +422,7 @@ func (p *Player) showExhaust() {
 		Y: p.position.Y + halfH + math.Cos(p.rotation)*-exhaustSpawnOffset,
 	}
 
-	p.game.exhaust = NewExhaust(exhaustSpawnPosition, p.rotation+180.0*math.Pi/180.0)
+	p.game.exhaust = entity.NewExhaust(exhaustSpawnPosition, p.rotation+180.0*math.Pi/180.0)
 }
 
 func (p *Player) useShield() {

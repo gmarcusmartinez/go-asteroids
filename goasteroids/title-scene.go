@@ -3,6 +3,7 @@ package goasteroids
 import (
 	"go-asteroids/assets"
 	"go-asteroids/internal/engine"
+	"go-asteroids/internal/entity"
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -13,7 +14,7 @@ import (
 type TitleScene struct {
 	meteors     map[int]*Meteor
 	meteorCount int
-	stars       []*Star
+	stars       []*entity.Star
 }
 
 func (t *TitleScene) Draw(screen *ebiten.Image) {
