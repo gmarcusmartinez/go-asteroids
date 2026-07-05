@@ -3,9 +3,7 @@ package goasteroids
 import (
 	"go-asteroids/assets"
 	"go-asteroids/internal/engine"
-	"go-asteroids/internal/highscore"
 	"image/color"
-	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -17,9 +15,6 @@ type TitleScene struct {
 	meteorCount int
 	stars       []*Star
 }
-
-var highScore int
-var originalHighScore int
 
 func (t *TitleScene) Draw(screen *ebiten.Image) {
 	/* draw stars */
@@ -58,7 +53,7 @@ func (t *TitleScene) Update(state *State) error {
 
 	/* add some meteors */
 	if len(t.meteors) < 10 {
-		m := NewMeteor(0.25, &GameScene{}, len(t.meteors)-1)
+		m := NewMeteor(0.25, len(t.meteors)-1)
 		t.meteorCount++
 		t.meteors[t.meteorCount] = m
 	}
@@ -67,14 +62,4 @@ func (t *TitleScene) Update(state *State) error {
 	}
 
 	return nil
-}
-
-func init() {
-	hs, err := highscore.Get()
-	if err != nil {
-		log.Println("Error getting high score", err)
-	}
-
-	highScore = hs
-	originalHighScore = hs
 }

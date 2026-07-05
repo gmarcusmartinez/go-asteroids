@@ -27,11 +27,10 @@ const (
 	driftTime            = time.Second * 30
 )
 
-var currentAcceleration float64
-var shotsFired = 0
-
 type Player struct {
 	game                *GameScene
+	currentAcceleration float64
+	shotsFired          int
 	sprite              *ebiten.Image
 	rotation            float64
 	position            engine.Vector
@@ -193,19 +192,19 @@ func (p *Player) accelerate() {
 
 	p.keepOnScreen()
 
-	if currentAcceleration < maxAcceleration {
-		currentAcceleration = p.playerVelocity + 4
+	if p.currentAcceleration < maxAcceleration {
+		p.currentAcceleration = p.playerVelocity + 4
 	}
 
-	if currentAcceleration >= 8 {
-		currentAcceleration = 8
+	if p.currentAcceleration >= 8 {
+		p.currentAcceleration = 8
 	}
 
-	p.playerVelocity = currentAcceleration
+	p.playerVelocity = p.currentAcceleration
 
 	/* move in the direction we are pointing */
-	dx := math.Sin(p.rotation) * currentAcceleration
-	dy := math.Cos(p.rotation) * -currentAcceleration
+	dx := math.Sin(p.rotation) * p.currentAcceleration
+	dy := math.Cos(p.rotation) * -p.currentAcceleration
 
 	p.showExhaust()
 
@@ -227,15 +226,15 @@ func (p *Player) isDoneAccelerating() {
 		}
 
 		/* figure out velocity */
-		if p.playerVelocity < currentAcceleration*10 {
-			p.playerVelocity = currentAcceleration*10 - 5.0
+		if p.playerVelocity < p.currentAcceleration*10 {
+			p.playerVelocity = p.currentAcceleration*10 - 5.0
 		}
 
 		if p.playerVelocity < 0 {
 			p.playerVelocity = 0
 		}
 
-		currentAcceleration = 0
+		p.currentAcceleration = 0
 
 		/* create a drift timer */
 		p.driftTimer = engine.NewTimer(driftTime)
@@ -315,8 +314,8 @@ func (p *Player) fireLasers() {
 
 	if p.shootCooldown.IsReady() && ebiten.IsKeyPressed(ebiten.KeySpace) {
 		p.shootCooldown.Reset()
-		shotsFired++
-		if shotsFired <= maxShotsPerBurst {
+		p.shotsFired++
+		if p.shotsFired <= maxShotsPerBurst {
 			bounds := p.sprite.Bounds()
 			halfW := float64(bounds.Dx()) / 2
 			halfH := float64(bounds.Dy()) / 2
@@ -332,7 +331,7 @@ func (p *Player) fireLasers() {
 
 			p.game.space.Add(laser.laserObj)
 
-			switch shotsFired {
+			switch p.shotsFired {
 			case 1:
 				if !p.game.laserOnePlayer.IsPlaying() {
 					_ = p.game.laserOnePlayer.Rewind()
@@ -351,7 +350,7 @@ func (p *Player) fireLasers() {
 			}
 		} else {
 			p.burstCooldown.Reset()
-			shotsFired = 0
+			p.shotsFired = 0
 		}
 	}
 }

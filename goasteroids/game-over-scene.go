@@ -43,7 +43,7 @@ func (o *GameOverScene) Draw(screen *ebiten.Image) {
 		Size:   48,
 	}, op)
 
-	if o.game.score > originalHighScore {
+	if o.game.score > o.game.originalHighScore {
 		textToDraw = "New High Score!"
 		op := &text.DrawOptions{
 			LayoutOptions: text.LayoutOptions{
@@ -65,7 +65,7 @@ func (o *GameOverScene) Draw(screen *ebiten.Image) {
 func (o *GameOverScene) Update(state *State) error {
 	/* spawn meteors */
 	if len(o.meteors) < 10 {
-		m := NewMeteor(0.25, &GameScene{}, len(o.meteors)-1)
+		m := NewMeteor(0.25, len(o.meteors)-1)
 		o.meteorCount++
 		o.meteors[o.meteorCount] = m
 	}

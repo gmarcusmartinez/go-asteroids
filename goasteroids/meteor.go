@@ -17,7 +17,6 @@ const (
 )
 
 type Meteor struct {
-	game          *GameScene
 	position      engine.Vector
 	rotation      float64
 	movement      engine.Vector
@@ -27,7 +26,7 @@ type Meteor struct {
 	meteorObj     *resolv.Circle
 }
 
-func NewMeteor(baseVelocity float64, g *GameScene, index int) *Meteor {
+func NewMeteor(baseVelocity float64, index int) *Meteor {
 	/* target the center of the screen */
 	target := engine.Vector{
 		X: engine.ScreenWidth / 2,
@@ -70,7 +69,6 @@ func NewMeteor(baseVelocity float64, g *GameScene, index int) *Meteor {
 
 	/* create a meteor object and return */
 	m := &Meteor{
-		game:          g,
 		position:      pos,
 		angle:         angle,
 		movement:      movement,
@@ -86,7 +84,7 @@ func NewMeteor(baseVelocity float64, g *GameScene, index int) *Meteor {
 	return m
 }
 
-func NewSmallMeteor(baseVelocity float64, g *GameScene, index int) *Meteor {
+func NewSmallMeteor(baseVelocity float64, index int) *Meteor {
 	/* target the center of the screen */
 	target := engine.Vector{
 		X: engine.ScreenWidth / 2,
@@ -129,7 +127,6 @@ func NewSmallMeteor(baseVelocity float64, g *GameScene, index int) *Meteor {
 
 	/* create a meteor object and return */
 	m := &Meteor{
-		game:          g,
 		position:      pos,
 		angle:         angle,
 		movement:      movement,

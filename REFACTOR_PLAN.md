@@ -119,10 +119,11 @@ handlers). Rough surface: `Meteor{Sprite,Position,Movement,Obj}`,
 - [x] Qualified all references; `go build`, `go vet`, `go test`, `gofmt -l` all clean
 - Note: local imports currently sort mixed with stdlib (gofmt behavior; `goimports` would regroup — deferrable).
 
-### Phase 2 — Kill global mutable state
-- [ ] `highScore`, `originalHighScore` (title-scene.go) → session/scene fields
-- [ ] `currentAcceleration`, `shotsFired` (player.go) → `Player` fields
-- [ ] Fix `NewMeteor(0.25, &GameScene{}, …)` throwaway-scene calls (title-scene.go:59, game-over-scene.go:67)
+### Phase 2 — Kill global mutable state ✅ DONE
+- [x] `highScore`, `originalHighScore` → `GameScene` fields, loaded in `NewGameScene` (was a package `init()` in title-scene.go); `GameOverScene` reads them via `o.game`
+- [x] `currentAcceleration`, `shotsFired` (player.go) → `Player` fields
+- [x] Fix `NewMeteor(0.25, &GameScene{}, …)` throwaway-scene calls — dropped the `*GameScene` param/field from `Meteor` entirely (it was redundant: the three `m.game` reads all sat inside `GameScene` methods where `m.game == g`). Bonus: `Meteor` now holds no scene reference, making it trivial to move in Phase 3.
+- [x] `go build`, `go vet`, `go test`, `gofmt -l` all clean
 - Risk: **low-medium** — independent of directories but unblocks a clean split.
 
 ### Phase 3 — Extract `entity` package

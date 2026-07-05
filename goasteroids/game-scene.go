@@ -71,6 +71,8 @@ type GameScene struct {
 	alienSoundPlayer     *audio.Player
 	alienSpawnTimer      *engine.Timer
 	aliens               map[int]*Alien
+	highScore            int
+	originalHighScore    int
 }
 
 func NewGameScene() *GameScene {
@@ -139,6 +141,14 @@ func NewGameScene() *GameScene {
 	alienSoundPlayer, _ := g.audioContext.NewPlayer(assets.AlienSound)
 	alienSoundPlayer.SetVolume(0.5)
 	g.alienSoundPlayer = alienSoundPlayer
+
+	/* load the current high score */
+	hs, err := highscore.Get()
+	if err != nil {
+		log.Println("Error getting high score", err)
+	}
+	g.highScore = hs
+	g.originalHighScore = hs
 
 	return g
 }
@@ -274,11 +284,11 @@ func (g *GameScene) Draw(screen *ebiten.Image) {
 	}, op)
 
 	/* draw high score */
-	if g.score >= highScore {
-		highScore = g.score
+	if g.score >= g.highScore {
+		g.highScore = g.score
 	}
 
-	textToDraw = fmt.Sprintf("HIGH SCORE %06d", highScore)
+	textToDraw = fmt.Sprintf("HIGH SCORE %06d", g.highScore)
 	op = &text.DrawOptions{
 		LayoutOptions: text.LayoutOptions{
 			PrimaryAlign: text.AlignCenter,
@@ -354,7 +364,7 @@ func (g *GameScene) spawnMeteors() {
 		g.meteorSpawnTimer.Reset()
 
 		if len(g.meteors) < g.meteorsPerLevel && g.meteorCount < g.meteorsPerLevel {
-			m := NewMeteor(g.baseVelocity, g, len(g.meteors)-1)
+			m := NewMeteor(g.baseVelocity, len(g.meteors)-1)
 			/* add meteors to game space */
 			g.space.Add(m.meteorObj)
 			g.meteorCount++
@@ -434,7 +444,7 @@ func (g *GameScene) isPlayerCollidingWithMeteor() {
 		if m.meteorObj.IsIntersecting(g.player.playerObj) {
 			if !g.player.isShielded {
 				/* trigger dying animation */
-				m.game.player.isDying = true
+				g.player.isDying = true
 				/* play explosion sound */
 				if !g.explosionPlayer.IsPlaying() {
 					_ = g.explosionPlayer.Rewind()
@@ -528,7 +538,7 @@ func (g *GameScene) isMeteorHitByPlayerLaser() {
 
 					numToSpawn := rand.Intn(numberOfSmallMeteorsFromLargeMeteor)
 					for range numToSpawn {
-						meteor := NewSmallMeteor(baseMeteorVelocity, g, len(m.game.meteors)-1)
+						meteor := NewSmallMeteor(baseMeteorVelocity, len(g.meteors)-1)
 						meteor.position = engine.Vector{
 							X: oldPos.X + float64(rand.Intn(100-50)) + 50,
 							Y: oldPos.Y + float64(rand.Intn(100-50)) + 50,
@@ -536,7 +546,7 @@ func (g *GameScene) isMeteorHitByPlayerLaser() {
 						meteor.meteorObj.SetPosition(meteor.position.X, meteor.position.Y)
 						g.space.Add(meteor.meteorObj)
 						g.meteorCount++
-						g.meteors[m.game.meteorCount] = meteor
+						g.meteors[g.meteorCount] = meteor
 					}
 
 				}
@@ -672,7 +682,7 @@ func (g *GameScene) isPlayerDead(state *State) {
 
 	if g.player.livesRemaining == 0 {
 		/* check for highscore */
-		if g.score > originalHighScore {
+		if g.score > g.originalHighScore {
 			err := highscore.Update(g.score)
 			if err != nil {
 				log.Println(err)
