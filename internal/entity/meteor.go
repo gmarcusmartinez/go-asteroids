@@ -1,4 +1,4 @@
-package goasteroids
+package entity
 
 import (
 	"go-asteroids/assets"
@@ -11,19 +11,18 @@ import (
 )
 
 const (
-	rotationSpeedMin                    = -0.02
-	rotationSpeedMax                    = 0.02
-	numberOfSmallMeteorsFromLargeMeteor = 4
+	rotationSpeedMin = -0.02
+	rotationSpeedMax = 0.02
 )
 
 type Meteor struct {
-	position      engine.Vector
+	Position      engine.Vector
 	rotation      float64
-	movement      engine.Vector
+	Movement      engine.Vector
 	angle         float64
 	rotationSpeed float64
-	sprite        *ebiten.Image
-	meteorObj     *resolv.Circle
+	Sprite        *ebiten.Image
+	Obj           *resolv.Circle
 }
 
 func NewMeteor(baseVelocity float64, index int) *Meteor {
@@ -69,17 +68,17 @@ func NewMeteor(baseVelocity float64, index int) *Meteor {
 
 	/* create a meteor object and return */
 	m := &Meteor{
-		position:      pos,
+		Position:      pos,
 		angle:         angle,
-		movement:      movement,
+		Movement:      movement,
 		rotationSpeed: rotationSpeedMin + rand.Float64()*(rotationSpeedMax-rotationSpeedMin),
-		sprite:        sprite,
-		meteorObj:     meteorObj,
+		Sprite:        sprite,
+		Obj:           meteorObj,
 	}
 
-	m.meteorObj.SetPosition(pos.X, pos.Y)
-	m.meteorObj.Tags().Set(engine.TagMeteor | engine.TagLarge)
-	m.meteorObj.SetData(&engine.ObjectData{Index: index})
+	m.Obj.SetPosition(pos.X, pos.Y)
+	m.Obj.Tags().Set(engine.TagMeteor | engine.TagLarge)
+	m.Obj.SetData(&engine.ObjectData{Index: index})
 
 	return m
 }
@@ -127,23 +126,23 @@ func NewSmallMeteor(baseVelocity float64, index int) *Meteor {
 
 	/* create a meteor object and return */
 	m := &Meteor{
-		position:      pos,
+		Position:      pos,
 		angle:         angle,
-		movement:      movement,
+		Movement:      movement,
 		rotationSpeed: rotationSpeedMin + rand.Float64()*(rotationSpeedMax-rotationSpeedMin),
-		sprite:        sprite,
-		meteorObj:     meteorObj,
+		Sprite:        sprite,
+		Obj:           meteorObj,
 	}
 
-	m.meteorObj.SetPosition(pos.X, pos.Y)
-	m.meteorObj.Tags().Set(engine.TagMeteor | engine.TagSmall)
-	m.meteorObj.SetData(&engine.ObjectData{Index: index})
+	m.Obj.SetPosition(pos.X, pos.Y)
+	m.Obj.Tags().Set(engine.TagMeteor | engine.TagSmall)
+	m.Obj.SetData(&engine.ObjectData{Index: index})
 
 	return m
 }
 
 func (m *Meteor) Draw(screen *ebiten.Image) {
-	bounds := m.sprite.Bounds()
+	bounds := m.Sprite.Bounds()
 	halfW := float64(bounds.Dx()) / 2
 	halfH := float64(bounds.Dy()) / 2
 
@@ -152,45 +151,45 @@ func (m *Meteor) Draw(screen *ebiten.Image) {
 	op.GeoM.Rotate(m.rotation)
 	op.GeoM.Translate(halfW, halfH)
 
-	op.GeoM.Translate(m.position.X, m.position.Y)
-	screen.DrawImage(m.sprite, op)
+	op.GeoM.Translate(m.Position.X, m.Position.Y)
+	screen.DrawImage(m.Sprite, op)
 
 }
 
 func (m *Meteor) Update() {
-	dx := m.movement.X
-	dy := m.movement.Y
+	dx := m.Movement.X
+	dy := m.Movement.Y
 
-	m.position.X += dx
-	m.position.Y += dy
+	m.Position.X += dx
+	m.Position.Y += dy
 	m.rotation += m.rotationSpeed
 
 	m.keepOnScreen()
 
 	/* update the collision object */
-	m.meteorObj.SetPosition(m.position.X, m.position.Y)
+	m.Obj.SetPosition(m.Position.X, m.Position.Y)
 
 }
 
 func (m *Meteor) keepOnScreen() {
-	if m.position.X >= float64(engine.ScreenWidth) {
-		m.position.X = 0
-		m.meteorObj.SetPosition(0, m.position.Y)
+	if m.Position.X >= float64(engine.ScreenWidth) {
+		m.Position.X = 0
+		m.Obj.SetPosition(0, m.Position.Y)
 	}
 
-	if m.position.X < 0 {
-		m.position.X = engine.ScreenWidth
-		m.meteorObj.SetPosition(engine.ScreenWidth, m.position.Y)
+	if m.Position.X < 0 {
+		m.Position.X = engine.ScreenWidth
+		m.Obj.SetPosition(engine.ScreenWidth, m.Position.Y)
 	}
 
-	if m.position.Y >= float64(engine.ScreenHeight) {
-		m.position.Y = 0
-		m.meteorObj.SetPosition(m.position.X, 0)
+	if m.Position.Y >= float64(engine.ScreenHeight) {
+		m.Position.Y = 0
+		m.Obj.SetPosition(m.Position.X, 0)
 	}
 
-	if m.position.Y < 0 {
-		m.position.Y = engine.ScreenHeight
-		m.meteorObj.SetPosition(m.position.X, engine.ScreenHeight)
+	if m.Position.Y < 0 {
+		m.Position.Y = engine.ScreenHeight
+		m.Obj.SetPosition(m.Position.X, engine.ScreenHeight)
 
 	}
 }

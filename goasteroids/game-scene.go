@@ -29,12 +29,14 @@ const (
 	alienAttackTime      = 3 * time.Second
 	alienSpawnTime       = 12 * time.Second
 	baseAlienVelocity    = 0.5
+
+	numberOfSmallMeteorsFromLargeMeteor = 4
 )
 
 type GameScene struct {
 	player               *Player
 	baseVelocity         float64
-	meteors              map[int]*Meteor
+	meteors              map[int]*entity.Meteor
 	meteorCount          int
 	meteorsPerLevel      int
 	meteorSpawnTimer     *engine.Timer
@@ -79,7 +81,7 @@ type GameScene struct {
 func NewGameScene() *GameScene {
 	g := &GameScene{
 		baseVelocity:         baseMeteorVelocity,
-		meteors:              make(map[int]*Meteor),
+		meteors:              make(map[int]*entity.Meteor),
 		meteorCount:          0,
 		meteorsPerLevel:      2,
 		meteorSpawnTimer:     engine.NewTimer(meteorSpawnTime),
@@ -365,9 +367,9 @@ func (g *GameScene) spawnMeteors() {
 		g.meteorSpawnTimer.Reset()
 
 		if len(g.meteors) < g.meteorsPerLevel && g.meteorCount < g.meteorsPerLevel {
-			m := NewMeteor(g.baseVelocity, len(g.meteors)-1)
+			m := entity.NewMeteor(g.baseVelocity, len(g.meteors)-1)
 			/* add meteors to game space */
-			g.space.Add(m.meteorObj)
+			g.space.Add(m.Obj)
 			g.meteorCount++
 			g.meteors[g.meteorCount] = m
 
@@ -442,7 +444,7 @@ func (g *GameScene) speedUpMeteors() {
 
 func (g *GameScene) isPlayerCollidingWithMeteor() {
 	for _, m := range g.meteors {
-		if m.meteorObj.IsIntersecting(g.player.playerObj) {
+		if m.Obj.IsIntersecting(g.player.playerObj) {
 			if !g.player.isShielded {
 				/* trigger dying animation */
 				g.player.isDying = true
@@ -514,10 +516,10 @@ func (g *GameScene) isAlienHitByPlayerLaser() {
 func (g *GameScene) isMeteorHitByPlayerLaser() {
 	for _, m := range g.meteors {
 		for _, l := range g.lasers {
-			if m.meteorObj.IsIntersecting(l.laserObj) {
-				if m.meteorObj.Tags().Has(engine.TagSmall) {
+			if m.Obj.IsIntersecting(l.laserObj) {
+				if m.Obj.Tags().Has(engine.TagSmall) {
 					/* hit small meteor */
-					m.sprite = g.explosionSmallSprite
+					m.Sprite = g.explosionSmallSprite
 					g.score++
 
 					/* play explosion sound */
@@ -527,8 +529,8 @@ func (g *GameScene) isMeteorHitByPlayerLaser() {
 					}
 				} else {
 					/* hit large meteor */
-					oldPos := m.position
-					m.sprite = g.explosionSprite
+					oldPos := m.Position
+					m.Sprite = g.explosionSprite
 					g.score++
 
 					/* play explosion sound */
@@ -539,13 +541,13 @@ func (g *GameScene) isMeteorHitByPlayerLaser() {
 
 					numToSpawn := rand.Intn(numberOfSmallMeteorsFromLargeMeteor)
 					for range numToSpawn {
-						meteor := NewSmallMeteor(baseMeteorVelocity, len(g.meteors)-1)
-						meteor.position = engine.Vector{
+						meteor := entity.NewSmallMeteor(baseMeteorVelocity, len(g.meteors)-1)
+						meteor.Position = engine.Vector{
 							X: oldPos.X + float64(rand.Intn(100-50)) + 50,
 							Y: oldPos.Y + float64(rand.Intn(100-50)) + 50,
 						}
-						meteor.meteorObj.SetPosition(meteor.position.X, meteor.position.Y)
-						g.space.Add(meteor.meteorObj)
+						meteor.Obj.SetPosition(meteor.Position.X, meteor.Position.Y)
+						g.space.Add(meteor.Obj)
 						g.meteorCount++
 						g.meteors[g.meteorCount] = meteor
 					}
@@ -556,10 +558,10 @@ func (g *GameScene) isMeteorHitByPlayerLaser() {
 	}
 }
 
-func (g *GameScene) bounceMeteor(m *Meteor) {
+func (g *GameScene) bounceMeteor(m *entity.Meteor) {
 	direction := engine.Vector{
-		X: (engine.ScreenWidth/2 - m.position.X) * -1,
-		Y: (engine.ScreenHeight/2 - m.position.Y) * -1,
+		X: (engine.ScreenWidth/2 - m.Position.X) * -1,
+		Y: (engine.ScreenHeight/2 - m.Position.Y) * -1,
 	}
 
 	normalized := direction.Normalize()
@@ -570,7 +572,7 @@ func (g *GameScene) bounceMeteor(m *Meteor) {
 		Y: normalized.Y * velocity,
 	}
 
-	m.movement = movement
+	m.Movement = movement
 }
 
 func (g *GameScene) cleanupMeteorsAndAliens() {
@@ -579,9 +581,9 @@ func (g *GameScene) cleanupMeteorsAndAliens() {
 
 		/* clean up shot meteors */
 		for i, m := range g.meteors {
-			if m.sprite == g.explosionSprite || m.sprite == g.explosionSmallSprite {
+			if m.Sprite == g.explosionSprite || m.Sprite == g.explosionSmallSprite {
 				delete(g.meteors, i)
-				g.space.Remove(m.meteorObj)
+				g.space.Remove(m.Obj)
 			}
 		}
 
@@ -693,7 +695,7 @@ func (g *GameScene) isPlayerDead(state *State) {
 		/* go to gameover scene */
 		state.SceneManager.GoToScene(&GameOverScene{
 			game:        g,
-			meteors:     make(map[int]*Meteor),
+			meteors:     make(map[int]*entity.Meteor),
 			meteorCount: 5,
 			stars:       entity.GenerateStars(numberOfStars),
 		})
@@ -748,7 +750,7 @@ func (g *GameScene) isLevelComplete(state *State) {
 
 func (g *GameScene) Reset() {
 	g.player = NewPlayer(g)
-	g.meteors = make(map[int]*Meteor)
+	g.meteors = make(map[int]*entity.Meteor)
 	g.meteorCount = 0
 	g.lasers = make(map[int]*Laser)
 	g.laserCount = 0

@@ -12,7 +12,7 @@ import (
 )
 
 type TitleScene struct {
-	meteors     map[int]*Meteor
+	meteors     map[int]*entity.Meteor
 	meteorCount int
 	stars       []*entity.Star
 }
@@ -54,7 +54,7 @@ func (t *TitleScene) Update(state *State) error {
 
 	/* add some meteors */
 	if len(t.meteors) < 10 {
-		m := NewMeteor(0.25, len(t.meteors)-1)
+		m := entity.NewMeteor(0.25, len(t.meteors)-1)
 		t.meteorCount++
 		t.meteors[t.meteorCount] = m
 	}

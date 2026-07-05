@@ -14,7 +14,7 @@ import (
 
 type GameOverScene struct {
 	game        *GameScene
-	meteors     map[int]*Meteor
+	meteors     map[int]*entity.Meteor
 	meteorCount int
 	stars       []*entity.Star
 }
@@ -66,7 +66,7 @@ func (o *GameOverScene) Draw(screen *ebiten.Image) {
 func (o *GameOverScene) Update(state *State) error {
 	/* spawn meteors */
 	if len(o.meteors) < 10 {
-		m := NewMeteor(0.25, len(o.meteors)-1)
+		m := entity.NewMeteor(0.25, len(o.meteors)-1)
 		o.meteorCount++
 		o.meteors[o.meteorCount] = m
 	}
