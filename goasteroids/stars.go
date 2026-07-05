@@ -1,6 +1,7 @@
 package goasteroids
 
 import (
+	"go-asteroids/internal/engine"
 	"image/color"
 	"math/rand"
 
@@ -17,8 +18,8 @@ type Star struct {
 
 func NewStar() *Star {
 	return &Star{
-		x:          rand.Float32() * ScreenWidth,
-		y:          rand.Float32() * ScreenHeight,
+		x:          rand.Float32() * engine.ScreenWidth,
+		y:          rand.Float32() * engine.ScreenHeight,
 		r:          rand.Float32() * (3 - 1),
 		brightness: rand.Float32() * 0xff,
 	}

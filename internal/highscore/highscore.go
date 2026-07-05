@@ -1,4 +1,4 @@
-package goasteroids
+package highscore
 
 import (
 	"fmt"
@@ -9,7 +9,8 @@ import (
 	"strings"
 )
 
-func getHighScore() (int, error) {
+// Get reads the persisted high score, creating the store file if needed.
+func Get() (int, error) {
 	/* get user name */
 	u, err := user.Current()
 
@@ -56,7 +57,8 @@ func getHighScore() (int, error) {
 	return s, nil
 }
 
-func updateHighScore(score int) error {
+// Update writes score to the persisted high-score store.
+func Update(score int) error {
 	/* get user name */
 	u, err := user.Current()
 	if err != nil {

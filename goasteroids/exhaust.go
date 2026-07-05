@@ -2,6 +2,7 @@ package goasteroids
 
 import (
 	"go-asteroids/assets"
+	"go-asteroids/internal/engine"
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -12,12 +13,12 @@ const (
 )
 
 type Exhaust struct {
-	position Vector
+	position engine.Vector
 	rotation float64
 	sprite   *ebiten.Image
 }
 
-func NewExhaust(pos Vector, rotation float64) *Exhaust {
+func NewExhaust(pos engine.Vector, rotation float64) *Exhaust {
 	/* set the sprite */
 	sprite := assets.ExhaustSprite
 

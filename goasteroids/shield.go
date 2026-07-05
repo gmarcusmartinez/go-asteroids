@@ -2,6 +2,7 @@ package goasteroids
 
 import (
 	"go-asteroids/assets"
+	"go-asteroids/internal/engine"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/solarlune/resolv"
@@ -9,13 +10,13 @@ import (
 
 type Shield struct {
 	game      *GameScene
-	position  Vector
+	position  engine.Vector
 	rotation  float64
 	sprite    *ebiten.Image
 	shieldObj *resolv.Circle
 }
 
-func NewShield(pos Vector, rotation float64, g *GameScene) *Shield {
+func NewShield(pos engine.Vector, rotation float64, g *GameScene) *Shield {
 	/* set the sprite */
 	sprite := assets.ShieldSprite
 
@@ -47,7 +48,7 @@ func (s *Shield) Update() {
 	deltaX := float64(s.sprite.Bounds().Dx()-s.game.player.sprite.Bounds().Dx()) * 0.5
 	deltaY := float64(s.sprite.Bounds().Dy()-s.game.player.sprite.Bounds().Dy()) * 0.5
 
-	pos := Vector{
+	pos := engine.Vector{
 		X: s.game.player.position.X - deltaX,
 		Y: s.game.player.position.Y - deltaY,
 	}

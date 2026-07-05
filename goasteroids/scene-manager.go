@@ -1,10 +1,14 @@
 package goasteroids
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"go-asteroids/internal/engine"
+
+	"github.com/hajimehoshi/ebiten/v2"
+)
 
 var (
-	transitionFrom = ebiten.NewImage(ScreenWidth, ScreenHeight)
-	transitionTo   = ebiten.NewImage(ScreenWidth, ScreenHeight)
+	transitionFrom = ebiten.NewImage(engine.ScreenWidth, engine.ScreenHeight)
+	transitionTo   = ebiten.NewImage(engine.ScreenWidth, engine.ScreenHeight)
 )
 
 const transitionMaxCount = 25

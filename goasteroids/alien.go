@@ -2,6 +2,7 @@ package goasteroids
 
 import (
 	"go-asteroids/assets"
+	"go-asteroids/internal/engine"
 	"math"
 	"math/rand"
 
@@ -13,9 +14,9 @@ type Alien struct {
 	game          *GameScene
 	sprite        *ebiten.Image
 	alienObj      *resolv.Circle
-	position      Vector
+	position      engine.Vector
 	angle         float64
-	movement      Vector
+	movement      engine.Vector
 	isIntelligent bool
 }
 
@@ -29,13 +30,13 @@ func NewAlien(baseVelocity float64, g *GameScene) *Alien {
 	switch alienType {
 	case 0:
 		/* comes in from right shoots random */
-		x := float64(ScreenWidth + 100)
-		y := float64(rand.Intn(ScreenHeight-100) + 100)
+		x := float64(engine.ScreenWidth + 100)
+		y := float64(rand.Intn(engine.ScreenHeight-100) + 100)
 
-		target := Vector{X: 0, Y: y}
-		pos := Vector{X: x, Y: y}
+		target := engine.Vector{X: 0, Y: y}
+		pos := engine.Vector{X: x, Y: y}
 		velocity := baseVelocity + rand.Float64()*2.5
-		movement := Vector{X: target.X - velocity, Y: 0}
+		movement := engine.Vector{X: target.X - velocity, Y: 0}
 
 		alien = Alien{
 			game:          g,
@@ -50,12 +51,12 @@ func NewAlien(baseVelocity float64, g *GameScene) *Alien {
 	case 1:
 		/* comes in from left shoots random */
 		x := float64(-100)
-		y := float64(rand.Intn(ScreenHeight-100) + 100)
+		y := float64(rand.Intn(engine.ScreenHeight-100) + 100)
 
-		target := Vector{X: 0, Y: y}
-		pos := Vector{X: x, Y: y}
+		target := engine.Vector{X: 0, Y: y}
+		pos := engine.Vector{X: x, Y: y}
 		velocity := baseVelocity + rand.Float64()*2.5
-		movement := Vector{X: target.X + velocity, Y: 0}
+		movement := engine.Vector{X: target.X + velocity, Y: 0}
 
 		alien = Alien{
 			game:          g,
@@ -69,15 +70,15 @@ func NewAlien(baseVelocity float64, g *GameScene) *Alien {
 		alien.alienObj.SetPosition(pos.X, pos.Y)
 	case 2:
 		/* Intelligent Alien */
-		middle := Vector{
-			X: ScreenWidth / 2,
-			Y: ScreenHeight / 2,
+		middle := engine.Vector{
+			X: engine.ScreenWidth / 2,
+			Y: engine.ScreenHeight / 2,
 		}
 
 		angle := rand.Float64() * 2 * math.Pi
-		r := ScreenHeight / 2.0
+		r := engine.ScreenHeight / 2.0
 
-		pos := Vector{
+		pos := engine.Vector{
 			X: middle.X + math.Cos(angle)*r,
 			Y: middle.Y + math.Sin(angle)*r,
 		}
@@ -85,13 +86,13 @@ func NewAlien(baseVelocity float64, g *GameScene) *Alien {
 		velocity := baseVelocity + rand.Float64()*1.5
 		target := g.player.position
 
-		direction := Vector{
+		direction := engine.Vector{
 			X: target.X - pos.X,
 			Y: target.Y / -pos.Y,
 		}
 
 		normalizedDirection := direction.Normalize()
-		movement := Vector{
+		movement := engine.Vector{
 			X: normalizedDirection.X * velocity,
 			Y: normalizedDirection.Y * velocity,
 		}
@@ -109,7 +110,7 @@ func NewAlien(baseVelocity float64, g *GameScene) *Alien {
 		alien.alienObj.SetPosition(pos.X, pos.Y)
 	}
 
-	alien.alienObj.Tags().Set(TagAlien)
+	alien.alienObj.Tags().Set(engine.TagAlien)
 	return &alien
 }
 

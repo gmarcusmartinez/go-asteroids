@@ -2,6 +2,7 @@ package goasteroids
 
 import (
 	"go-asteroids/assets"
+	"go-asteroids/internal/engine"
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -14,13 +15,13 @@ const (
 
 type Laser struct {
 	game     *GameScene
-	position Vector
+	position engine.Vector
 	rotation float64
 	sprite   *ebiten.Image
 	laserObj *resolv.ConvexPolygon
 }
 
-func NewLaser(pos Vector, rotation float64, index int, g *GameScene) *Laser {
+func NewLaser(pos engine.Vector, rotation float64, index int, g *GameScene) *Laser {
 	/* set the sprite */
 	sprite := assets.LaserSprite
 
@@ -43,8 +44,8 @@ func NewLaser(pos Vector, rotation float64, index int, g *GameScene) *Laser {
 
 	/* set the position of the collision obj */
 	l.laserObj.SetPosition(pos.X, pos.Y)
-	l.laserObj.SetData(&ObjectData{index: index})
-	l.laserObj.Tags().Set(TagLaser)
+	l.laserObj.SetData(&engine.ObjectData{Index: index})
+	l.laserObj.Tags().Set(engine.TagLaser)
 
 	return l
 

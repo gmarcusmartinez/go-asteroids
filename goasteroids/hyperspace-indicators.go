@@ -2,17 +2,18 @@ package goasteroids
 
 import (
 	"go-asteroids/assets"
+	"go-asteroids/internal/engine"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/colorm"
 )
 
 type HyperspaceIndicator struct {
-	position Vector
+	position engine.Vector
 	sprite   *ebiten.Image
 }
 
-func NewHyperspaceIndicator(pos Vector) *HyperspaceIndicator {
+func NewHyperspaceIndicator(pos engine.Vector) *HyperspaceIndicator {
 	return &HyperspaceIndicator{
 		position: pos,
 		sprite:   assets.HyperspaceIndicator,

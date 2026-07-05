@@ -2,6 +2,8 @@ package goasteroids
 
 import (
 	"go-asteroids/assets"
+	"go-asteroids/internal/engine"
+	"go-asteroids/internal/highscore"
 	"image/color"
 	"log"
 
@@ -25,7 +27,7 @@ func (t *TitleScene) Draw(screen *ebiten.Image) {
 		s.Draw(screen)
 	}
 
-	textToDraw := "Wellcome to Hell"
+	textToDraw := "Welcome to Hell"
 
 	op := &text.DrawOptions{
 		LayoutOptions: text.LayoutOptions{
@@ -35,7 +37,7 @@ func (t *TitleScene) Draw(screen *ebiten.Image) {
 
 	op.ColorScale.ScaleWithColor(color.White)
 
-	op.GeoM.Translate(float64(ScreenWidth/2), ScreenHeight-200)
+	op.GeoM.Translate(float64(engine.ScreenWidth/2), engine.ScreenHeight-200)
 	text.Draw(screen, textToDraw, &text.GoTextFace{
 		Source: assets.TitleFont,
 		Size:   48,
@@ -68,7 +70,7 @@ func (t *TitleScene) Update(state *State) error {
 }
 
 func init() {
-	hs, err := getHighScore()
+	hs, err := highscore.Get()
 	if err != nil {
 		log.Println("Error getting high score", err)
 	}

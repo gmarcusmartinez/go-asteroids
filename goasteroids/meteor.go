@@ -2,6 +2,7 @@ package goasteroids
 
 import (
 	"go-asteroids/assets"
+	"go-asteroids/internal/engine"
 	"math"
 	"math/rand"
 
@@ -10,16 +11,16 @@ import (
 )
 
 const (
-	roataionSpeedMin                    = -0.02
-	roataionSpeedMax                    = 0.02
-	numberOfSmallMeteorsFromLargeMetoer = 4
+	rotationSpeedMin                    = -0.02
+	rotationSpeedMax                    = 0.02
+	numberOfSmallMeteorsFromLargeMeteor = 4
 )
 
 type Meteor struct {
 	game          *GameScene
-	position      Vector
+	position      engine.Vector
 	rotation      float64
-	movement      Vector
+	movement      engine.Vector
 	angle         float64
 	rotationSpeed float64
 	sprite        *ebiten.Image
@@ -28,19 +29,19 @@ type Meteor struct {
 
 func NewMeteor(baseVelocity float64, g *GameScene, index int) *Meteor {
 	/* target the center of the screen */
-	target := Vector{
-		X: ScreenWidth / 2,
-		Y: ScreenHeight / 2,
+	target := engine.Vector{
+		X: engine.ScreenWidth / 2,
+		Y: engine.ScreenHeight / 2,
 	}
 
 	/* pick a random angle */
 	angle := rand.Float64() * 2 * math.Pi
 
 	/* spawn distance from center */
-	r := ScreenWidth/2.0 + 500
+	r := engine.ScreenWidth/2.0 + 500
 
 	/* create the position vector */
-	pos := Vector{
+	pos := engine.Vector{
 		X: target.X + math.Cos(angle)*r,
 		Y: target.Y + math.Sin(angle)*r,
 	}
@@ -49,14 +50,14 @@ func NewMeteor(baseVelocity float64, g *GameScene, index int) *Meteor {
 	velocity := baseVelocity + rand.Float64()*1.5
 
 	/* create and normalize direction vector */
-	direction := Vector{
+	direction := engine.Vector{
 		X: target.X - pos.X,
 		Y: target.Y - pos.Y,
 	}
 	normalizedDirection := direction.Normalize()
 
 	/* create movement vector */
-	movement := Vector{
+	movement := engine.Vector{
 		X: normalizedDirection.X * velocity,
 		Y: normalizedDirection.Y * velocity,
 	}
@@ -73,33 +74,33 @@ func NewMeteor(baseVelocity float64, g *GameScene, index int) *Meteor {
 		position:      pos,
 		angle:         angle,
 		movement:      movement,
-		rotationSpeed: roataionSpeedMin + rand.Float64()*(roataionSpeedMax-roataionSpeedMin),
+		rotationSpeed: rotationSpeedMin + rand.Float64()*(rotationSpeedMax-rotationSpeedMin),
 		sprite:        sprite,
 		meteorObj:     meteorObj,
 	}
 
 	m.meteorObj.SetPosition(pos.X, pos.Y)
-	m.meteorObj.Tags().Set(TagMeteor | TagLarge)
-	m.meteorObj.SetData(&ObjectData{index: index})
+	m.meteorObj.Tags().Set(engine.TagMeteor | engine.TagLarge)
+	m.meteorObj.SetData(&engine.ObjectData{Index: index})
 
 	return m
 }
 
 func NewSmallMeteor(baseVelocity float64, g *GameScene, index int) *Meteor {
 	/* target the center of the screen */
-	target := Vector{
-		X: ScreenWidth / 2,
-		Y: ScreenHeight / 2,
+	target := engine.Vector{
+		X: engine.ScreenWidth / 2,
+		Y: engine.ScreenHeight / 2,
 	}
 
 	/* pick a random angle */
 	angle := rand.Float64() * 2 * math.Pi
 
 	/* spawn distance from center */
-	r := ScreenWidth/2.0 + 500
+	r := engine.ScreenWidth/2.0 + 500
 
 	/* create the position vector */
-	pos := Vector{
+	pos := engine.Vector{
 		X: target.X + math.Cos(angle)*r,
 		Y: target.Y + math.Sin(angle)*r,
 	}
@@ -108,14 +109,14 @@ func NewSmallMeteor(baseVelocity float64, g *GameScene, index int) *Meteor {
 	velocity := baseVelocity + rand.Float64()*1.5
 
 	/* create and normalize direction vector */
-	direction := Vector{
+	direction := engine.Vector{
 		X: target.X - pos.X,
 		Y: target.Y - pos.Y,
 	}
 	normalizedDirection := direction.Normalize()
 
 	/* create movement vector */
-	movement := Vector{
+	movement := engine.Vector{
 		X: normalizedDirection.X * velocity,
 		Y: normalizedDirection.Y * velocity,
 	}
@@ -132,14 +133,14 @@ func NewSmallMeteor(baseVelocity float64, g *GameScene, index int) *Meteor {
 		position:      pos,
 		angle:         angle,
 		movement:      movement,
-		rotationSpeed: roataionSpeedMin + rand.Float64()*(roataionSpeedMax-roataionSpeedMin),
+		rotationSpeed: rotationSpeedMin + rand.Float64()*(rotationSpeedMax-rotationSpeedMin),
 		sprite:        sprite,
 		meteorObj:     meteorObj,
 	}
 
 	m.meteorObj.SetPosition(pos.X, pos.Y)
-	m.meteorObj.Tags().Set(TagMeteor | TagSmall)
-	m.meteorObj.SetData(&ObjectData{index: index})
+	m.meteorObj.Tags().Set(engine.TagMeteor | engine.TagSmall)
+	m.meteorObj.SetData(&engine.ObjectData{Index: index})
 
 	return m
 }
@@ -175,24 +176,24 @@ func (m *Meteor) Update() {
 }
 
 func (m *Meteor) keepOnScreen() {
-	if m.position.X >= float64(ScreenWidth) {
+	if m.position.X >= float64(engine.ScreenWidth) {
 		m.position.X = 0
 		m.meteorObj.SetPosition(0, m.position.Y)
 	}
 
 	if m.position.X < 0 {
-		m.position.X = ScreenWidth
-		m.meteorObj.SetPosition(ScreenWidth, m.position.Y)
+		m.position.X = engine.ScreenWidth
+		m.meteorObj.SetPosition(engine.ScreenWidth, m.position.Y)
 	}
 
-	if m.position.Y >= float64(ScreenHeight) {
+	if m.position.Y >= float64(engine.ScreenHeight) {
 		m.position.Y = 0
 		m.meteorObj.SetPosition(m.position.X, 0)
 	}
 
 	if m.position.Y < 0 {
-		m.position.Y = ScreenHeight
-		m.meteorObj.SetPosition(m.position.X, ScreenHeight)
+		m.position.Y = engine.ScreenHeight
+		m.meteorObj.SetPosition(m.position.X, engine.ScreenHeight)
 
 	}
 }

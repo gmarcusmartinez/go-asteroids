@@ -2,6 +2,7 @@ package goasteroids
 
 import (
 	"go-asteroids/assets"
+	"go-asteroids/internal/engine"
 	"image/color"
 	"os"
 
@@ -36,7 +37,7 @@ func (o *GameOverScene) Draw(screen *ebiten.Image) {
 	}
 
 	op.ColorScale.ScaleWithColor(color.White)
-	op.GeoM.Translate(ScreenWidth/2, ScreenHeight/2+100)
+	op.GeoM.Translate(engine.ScreenWidth/2, engine.ScreenHeight/2+100)
 	text.Draw(screen, textToDraw, &text.GoTextFace{
 		Source: assets.TitleFont,
 		Size:   48,
@@ -51,7 +52,7 @@ func (o *GameOverScene) Draw(screen *ebiten.Image) {
 		}
 
 		op.ColorScale.ScaleWithColor(color.White)
-		op.GeoM.Translate(ScreenWidth/2, ScreenHeight/2-200)
+		op.GeoM.Translate(engine.ScreenWidth/2, engine.ScreenHeight/2-200)
 
 		text.Draw(screen, textToDraw, &text.GoTextFace{
 			Source: assets.TitleFont,

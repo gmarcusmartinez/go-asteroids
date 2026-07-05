@@ -2,6 +2,7 @@ package goasteroids
 
 import (
 	"go-asteroids/assets"
+	"go-asteroids/internal/engine"
 	"math"
 	"math/rand"
 	"time"
@@ -14,8 +15,6 @@ import (
 const (
 	rotationPerSecond    = math.Pi
 	maxAcceleration      = 8.0
-	ScreenWidth          = 1280
-	ScreenHeight         = 720
 	shootCooldown        = time.Millisecond * 150
 	burstCooldown        = time.Millisecond * 500
 	laserSpawnOffset     = 50.0
@@ -35,25 +34,25 @@ type Player struct {
 	game                *GameScene
 	sprite              *ebiten.Image
 	rotation            float64
-	position            Vector
+	position            engine.Vector
 	playerVelocity      float64
 	playerObj           *resolv.Circle
-	shootCooldown       *Timer
-	burstCooldown       *Timer
+	shootCooldown       *engine.Timer
+	burstCooldown       *engine.Timer
 	isShielded          bool
 	isDying             bool
 	isDead              bool
-	dyingTimer          *Timer
+	dyingTimer          *engine.Timer
 	dyingCounter        int
 	livesRemaining      int
 	lifeIndicators      []*LifeIndicator
-	shieldTimer         *Timer
+	shieldTimer         *engine.Timer
 	shieldsRemaining    int
 	shieldIndicators    []*ShieldIndicator
 	hyperspaceIndicator *HyperspaceIndicator
-	hyperspaceTimer     *Timer
+	hyperspaceTimer     *engine.Timer
 	driftAngle          float64
-	driftTimer          *Timer
+	driftTimer          *engine.Timer
 }
 
 func NewPlayer(game *GameScene) *Player {
@@ -64,9 +63,9 @@ func NewPlayer(game *GameScene) *Player {
 	halfW := float64(bounds.Dx()) / 2
 	halfH := float64(bounds.Dy()) / 2
 
-	pos := Vector{
-		X: ScreenWidth/2 - halfW,
-		Y: ScreenHeight/2 - halfH,
+	pos := engine.Vector{
+		X: engine.ScreenWidth/2 - halfW,
+		Y: engine.ScreenHeight/2 - halfH,
 	}
 
 	/* create collision object */
@@ -77,7 +76,7 @@ func NewPlayer(game *GameScene) *Player {
 	var xPosition = 20.0
 
 	for range numberOfLives {
-		li := NewLifeIndicator(Vector{
+		li := NewLifeIndicator(engine.Vector{
 			X: xPosition,
 			Y: 20,
 		})
@@ -90,7 +89,7 @@ func NewPlayer(game *GameScene) *Player {
 	xPosition = 45.0
 
 	for range numberOfShields {
-		si := NewShieldIndicator(Vector{
+		si := NewShieldIndicator(engine.Vector{
 			X: xPosition,
 			Y: 60,
 		})
@@ -103,24 +102,24 @@ func NewPlayer(game *GameScene) *Player {
 		game:                game,
 		position:            pos,
 		playerObj:           playerObj,
-		shootCooldown:       NewTimer(shootCooldown),
-		burstCooldown:       NewTimer(burstCooldown),
+		shootCooldown:       engine.NewTimer(shootCooldown),
+		burstCooldown:       engine.NewTimer(burstCooldown),
 		isShielded:          false,
 		isDying:             false,
 		isDead:              false,
-		dyingTimer:          NewTimer(dyingAnimationAmount),
+		dyingTimer:          engine.NewTimer(dyingAnimationAmount),
 		dyingCounter:        0,
 		livesRemaining:      numberOfLives,
 		lifeIndicators:      lifeIndicators,
 		shieldsRemaining:    numberOfShields,
 		shieldIndicators:    shieldIndicators,
-		hyperspaceIndicator: NewHyperspaceIndicator(Vector{X: 37.0, Y: 95.0}),
+		hyperspaceIndicator: NewHyperspaceIndicator(engine.Vector{X: 37.0, Y: 95.0}),
 		hyperspaceTimer:     nil,
 		driftTimer:          nil,
 	}
 
 	p.playerObj.SetPosition(pos.X, pos.Y)
-	p.playerObj.Tags().Set(TagPlayer)
+	p.playerObj.Tags().Set(engine.TagPlayer)
 
 	return p
 }
@@ -239,7 +238,7 @@ func (p *Player) isDoneAccelerating() {
 		currentAcceleration = 0
 
 		/* create a drift timer */
-		p.driftTimer = NewTimer(driftTime)
+		p.driftTimer = engine.NewTimer(driftTime)
 
 		/* save angle of rotation */
 		p.driftAngle = p.rotation
@@ -322,9 +321,9 @@ func (p *Player) fireLasers() {
 			halfW := float64(bounds.Dx()) / 2
 			halfH := float64(bounds.Dy()) / 2
 
-			spawnPos := Vector{
-				p.position.X + halfW + math.Sin(p.rotation)*laserSpawnOffset,
-				p.position.Y + halfH + math.Cos(p.rotation)*-laserSpawnOffset,
+			spawnPos := engine.Vector{
+				X: p.position.X + halfW + math.Sin(p.rotation)*laserSpawnOffset,
+				Y: p.position.Y + halfH + math.Cos(p.rotation)*-laserSpawnOffset,
 			}
 
 			p.game.laserCount++
@@ -362,9 +361,9 @@ func (p *Player) hyperspace() {
 		var randX, randY int
 
 		for {
-			randX = rand.Intn(ScreenWidth)
-			randY = rand.Intn(ScreenHeight)
-			collision := p.game.checkCollision(p.playerObj, nil)
+			randX = rand.Intn(engine.ScreenWidth)
+			randY = rand.Intn(engine.ScreenHeight)
+			collision := engine.CheckCollision(p.playerObj)
 			if !collision {
 				break
 			}
@@ -374,7 +373,7 @@ func (p *Player) hyperspace() {
 		p.position.Y = float64(randY)
 
 		if p.hyperspaceTimer == nil {
-			p.hyperspaceTimer = NewTimer(hyperspaceCooldown)
+			p.hyperspaceTimer = engine.NewTimer(hyperspaceCooldown)
 		}
 
 		p.hyperspaceTimer.Reset()
@@ -388,26 +387,26 @@ func (p *Player) isPlayerDead() {
 }
 
 func (p *Player) keepOnScreen() {
-	if p.position.X >= float64(ScreenWidth) {
+	if p.position.X >= float64(engine.ScreenWidth) {
 		p.position.X = 0
 		p.playerObj.SetPosition(0, p.position.Y)
 	}
 
 	if p.position.X < 0 {
-		p.position.X = ScreenWidth
-		p.playerObj.SetPosition(ScreenWidth, p.position.Y)
+		p.position.X = engine.ScreenWidth
+		p.playerObj.SetPosition(engine.ScreenWidth, p.position.Y)
 
 	}
 
-	if p.position.Y >= float64(ScreenHeight) {
+	if p.position.Y >= float64(engine.ScreenHeight) {
 		p.position.Y = 0
 		p.playerObj.SetPosition(p.position.X, 0)
 
 	}
 
 	if p.position.Y < 0 {
-		p.position.Y = ScreenHeight
-		p.playerObj.SetPosition(p.position.X, ScreenHeight)
+		p.position.Y = engine.ScreenHeight
+		p.playerObj.SetPosition(p.position.X, engine.ScreenHeight)
 	}
 }
 
@@ -418,9 +417,9 @@ func (p *Player) showExhaust() {
 	halfH := float64(bounds.Dy()) / 2
 
 	/* where to spawn exhaust */
-	exhaustSpawnPosition := Vector{
-		p.position.X + halfW + math.Sin(p.rotation)*exhaustSpawnOffset,
-		p.position.Y + halfH + math.Cos(p.rotation)*-exhaustSpawnOffset,
+	exhaustSpawnPosition := engine.Vector{
+		X: p.position.X + halfW + math.Sin(p.rotation)*exhaustSpawnOffset,
+		Y: p.position.Y + halfH + math.Cos(p.rotation)*-exhaustSpawnOffset,
 	}
 
 	p.game.exhaust = NewExhaust(exhaustSpawnPosition, p.rotation+180.0*math.Pi/180.0)
@@ -434,8 +433,8 @@ func (p *Player) useShield() {
 		}
 
 		p.isShielded = true
-		p.shieldTimer = NewTimer(shieldDuration)
-		p.game.shield = NewShield(Vector{}, p.rotation, p.game)
+		p.shieldTimer = engine.NewTimer(shieldDuration)
+		p.game.shield = NewShield(engine.Vector{}, p.rotation, p.game)
 		p.shieldsRemaining--
 		p.shieldIndicators = p.shieldIndicators[:len(p.shieldIndicators)-1]
 	}

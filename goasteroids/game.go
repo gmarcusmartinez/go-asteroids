@@ -1,6 +1,10 @@
 package goasteroids
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"go-asteroids/internal/engine"
+
+	"github.com/hajimehoshi/ebiten/v2"
+)
 
 type Game struct {
 	sceneManager *SceneManager
@@ -35,5 +39,5 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(_, _ int) (width, height int) {
-	return ScreenWidth, ScreenHeight
+	return engine.ScreenWidth, engine.ScreenHeight
 }

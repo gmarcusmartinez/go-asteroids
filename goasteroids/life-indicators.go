@@ -2,18 +2,19 @@ package goasteroids
 
 import (
 	"go-asteroids/assets"
+	"go-asteroids/internal/engine"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/colorm"
 )
 
 type LifeIndicator struct {
-	position Vector
+	position engine.Vector
 	rotation float64
 	sprite   *ebiten.Image
 }
 
-func NewLifeIndicator(pos Vector) *LifeIndicator {
+func NewLifeIndicator(pos engine.Vector) *LifeIndicator {
 	sprite := assets.LifeIndicator
 
 	return &LifeIndicator{

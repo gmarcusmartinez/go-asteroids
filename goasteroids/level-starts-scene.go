@@ -3,6 +3,7 @@ package goasteroids
 import (
 	"fmt"
 	"go-asteroids/assets"
+	"go-asteroids/internal/engine"
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -12,7 +13,7 @@ import (
 
 type LevelStartsScene struct {
 	game           *GameScene
-	nextLevelTimer *Timer
+	nextLevelTimer *engine.Timer
 	stars          []*Star
 }
 
@@ -29,7 +30,7 @@ func (l *LevelStartsScene) Draw(screen *ebiten.Image) {
 	}
 
 	op.ColorScale.ScaleWithColor(color.White)
-	op.GeoM.Translate(ScreenWidth/2, ScreenHeight/2)
+	op.GeoM.Translate(engine.ScreenWidth/2, engine.ScreenHeight/2)
 
 	text.Draw(screen, textToDraw, &text.GoTextFace{
 		Source: assets.TitleFont,

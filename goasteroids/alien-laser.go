@@ -2,6 +2,7 @@ package goasteroids
 
 import (
 	"go-asteroids/assets"
+	"go-asteroids/internal/engine"
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -13,13 +14,13 @@ const (
 )
 
 type AlienLaser struct {
-	position Vector
+	position engine.Vector
 	rotation float64
 	sprite   *ebiten.Image
 	laserObj *resolv.ConvexPolygon
 }
 
-func NewAlienLaser(pos Vector, rotation float64) *AlienLaser {
+func NewAlienLaser(pos engine.Vector, rotation float64) *AlienLaser {
 	/* set the sprite */
 	sprite := assets.AlienLaserSprite
 
@@ -41,7 +42,7 @@ func NewAlienLaser(pos Vector, rotation float64) *AlienLaser {
 
 	/* set the position of the collision obj */
 	al.laserObj.SetPosition(pos.X, pos.Y)
-	al.laserObj.Tags().Set(TagLaser)
+	al.laserObj.Tags().Set(engine.TagLaser)
 
 	return al
 

@@ -2,17 +2,18 @@ package goasteroids
 
 import (
 	"go-asteroids/assets"
+	"go-asteroids/internal/engine"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/colorm"
 )
 
 type ShieldIndicator struct {
-	position Vector
+	position engine.Vector
 	sprite   *ebiten.Image
 }
 
-func NewShieldIndicator(pos Vector) *ShieldIndicator {
+func NewShieldIndicator(pos engine.Vector) *ShieldIndicator {
 	return &ShieldIndicator{
 		position: pos,
 		sprite:   assets.ShieldIndicator,

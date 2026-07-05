@@ -3,6 +3,8 @@ package goasteroids
 import (
 	"fmt"
 	"go-asteroids/assets"
+	"go-asteroids/internal/engine"
+	"go-asteroids/internal/highscore"
 	"image/color"
 	"log"
 	"math"
@@ -34,8 +36,8 @@ type GameScene struct {
 	meteors              map[int]*Meteor
 	meteorCount          int
 	meteorsPerLevel      int
-	meteorSpawnTimer     *Timer
-	velocityTimer        *Timer
+	meteorSpawnTimer     *engine.Timer
+	velocityTimer        *engine.Timer
 	space                *resolv.Space
 	lasers               map[int]*Laser
 	laserCount           int
@@ -43,7 +45,7 @@ type GameScene struct {
 	explosionSprite      *ebiten.Image
 	explosionSmallSprite *ebiten.Image
 	explosionFrames      []*ebiten.Image
-	cleanupTimer         *Timer
+	cleanupTimer         *engine.Timer
 	playerIsDead         bool
 	audioContext         *audio.Context
 	thrustPlayer         *audio.Player
@@ -54,20 +56,20 @@ type GameScene struct {
 	explosionPlayer      *audio.Player
 	beatOnePlayer        *audio.Player
 	beatTwoPlayer        *audio.Player
-	beatTimer            *Timer
+	beatTimer            *engine.Timer
 	beatWaitTime         int
 	playBeatOne          bool
 	stars                []*Star
 	currentLevel         int
 	shield               *Shield
 	shieldsUpPlayer      *audio.Player
-	alienAttackTimer     *Timer
+	alienAttackTimer     *engine.Timer
 	alienCount           int
 	alienLaserCount      int
 	alienLaserPlayer     *audio.Player
 	alienLasers          map[int]*AlienLaser
 	alienSoundPlayer     *audio.Player
-	alienSpawnTimer      *Timer
+	alienSpawnTimer      *engine.Timer
 	aliens               map[int]*Alien
 }
 
@@ -77,15 +79,15 @@ func NewGameScene() *GameScene {
 		meteors:              make(map[int]*Meteor),
 		meteorCount:          0,
 		meteorsPerLevel:      2,
-		meteorSpawnTimer:     NewTimer(meteorSpawnTime),
-		velocityTimer:        NewTimer(meteorSpeedUpTime),
-		space:                resolv.NewSpace(ScreenWidth, ScreenHeight, 16, 16),
+		meteorSpawnTimer:     engine.NewTimer(meteorSpawnTime),
+		velocityTimer:        engine.NewTimer(meteorSpeedUpTime),
+		space:                resolv.NewSpace(engine.ScreenWidth, engine.ScreenHeight, 16, 16),
 		lasers:               make(map[int]*Laser),
 		laserCount:           0,
 		explosionSprite:      assets.ExplosionSprite,
 		explosionSmallSprite: assets.ExplosionSmallSprite,
-		cleanupTimer:         NewTimer(cleanupExplosionTime),
-		beatTimer:            NewTimer(2 * time.Second),
+		cleanupTimer:         engine.NewTimer(cleanupExplosionTime),
+		beatTimer:            engine.NewTimer(2 * time.Second),
 		beatWaitTime:         baseBeatWaitTime,
 		stars:                GenerateStars(numberOfStars),
 		currentLevel:         1,
@@ -93,8 +95,8 @@ func NewGameScene() *GameScene {
 		alienCount:           0,
 		alienLasers:          make(map[int]*AlienLaser),
 		alienLaserCount:      0,
-		alienSpawnTimer:      NewTimer(alienSpawnTime),
-		alienAttackTimer:     NewTimer(alienAttackTime),
+		alienSpawnTimer:      engine.NewTimer(alienSpawnTime),
+		alienAttackTimer:     engine.NewTimer(alienAttackTime),
 	}
 
 	g.player = NewPlayer(g)
@@ -264,7 +266,7 @@ func (g *GameScene) Draw(screen *ebiten.Image) {
 		},
 	}
 	op.ColorScale.ScaleWithColor(color.White)
-	op.GeoM.Translate(ScreenWidth/2, 40)
+	op.GeoM.Translate(engine.ScreenWidth/2, 40)
 
 	text.Draw(screen, textToDraw, &text.GoTextFace{
 		Source: assets.ScoreFont,
@@ -284,7 +286,7 @@ func (g *GameScene) Draw(screen *ebiten.Image) {
 	}
 
 	op.ColorScale.ScaleWithColor(color.White)
-	op.GeoM.Translate(ScreenWidth/2, 80)
+	op.GeoM.Translate(engine.ScreenWidth/2, 80)
 
 	text.Draw(screen, textToDraw, &text.GoTextFace{
 		Source: assets.ScoreFont,
@@ -300,7 +302,7 @@ func (g *GameScene) Draw(screen *ebiten.Image) {
 	}
 
 	op.ColorScale.ScaleWithColor(color.White)
-	op.GeoM.Translate(ScreenWidth/2, ScreenHeight-40)
+	op.GeoM.Translate(engine.ScreenWidth/2, engine.ScreenHeight-40)
 
 	text.Draw(screen, textToDraw, &text.GoTextFace{
 		Source: assets.LevelFont,
@@ -309,7 +311,7 @@ func (g *GameScene) Draw(screen *ebiten.Image) {
 
 }
 
-func (g *GameScene) Layout(width, height int) (ScreenWidth, ScreenHeight int) {
+func (g *GameScene) Layout(width, height int) (int, int) {
 	return width, height
 }
 
@@ -329,7 +331,7 @@ func (g *GameScene) beatSound() {
 		/* speed up timer */
 		if g.beatWaitTime > 400 {
 			g.beatWaitTime = g.beatWaitTime - 25
-			g.beatTimer = NewTimer(time.Millisecond * time.Duration(g.beatWaitTime))
+			g.beatTimer = engine.NewTimer(time.Millisecond * time.Duration(g.beatWaitTime))
 		}
 	}
 }
@@ -384,8 +386,8 @@ func (g *GameScene) spawnAliens() {
 
 func (g *GameScene) removeOffscreenAliens() {
 	for i, a := range g.aliens {
-		if a.position.X > ScreenWidth+200 ||
-			a.position.Y > ScreenHeight+200 ||
+		if a.position.X > engine.ScreenWidth+200 ||
+			a.position.Y > engine.ScreenHeight+200 ||
 			a.position.X < -200 ||
 			a.position.Y < -200 {
 			g.space.Remove(a.alienObj)
@@ -397,8 +399,8 @@ func (g *GameScene) removeOffscreenAliens() {
 
 func (g *GameScene) removeOffscreenLasers() {
 	for i, l := range g.lasers {
-		if l.position.X > ScreenWidth+200 ||
-			l.position.Y > ScreenHeight+200 ||
+		if l.position.X > engine.ScreenWidth+200 ||
+			l.position.Y > engine.ScreenHeight+200 ||
 			l.position.X < -200 ||
 			l.position.Y < -200 {
 			g.space.Remove(l.laserObj)
@@ -408,8 +410,8 @@ func (g *GameScene) removeOffscreenLasers() {
 	}
 
 	for i, al := range g.alienLasers {
-		if al.position.X > ScreenWidth+200 ||
-			al.position.Y > ScreenHeight+200 ||
+		if al.position.X > engine.ScreenWidth+200 ||
+			al.position.Y > engine.ScreenHeight+200 ||
 			al.position.X < -200 ||
 			al.position.Y < -200 {
 			g.space.Remove(al.laserObj)
@@ -482,8 +484,8 @@ func (g *GameScene) isAlienHitByPlayerLaser() {
 	for _, a := range g.aliens {
 		for _, l := range g.lasers {
 			if a.alienObj.IsIntersecting(l.laserObj) {
-				laserData := l.laserObj.Data().(*ObjectData)
-				delete(g.alienLasers, laserData.index)
+				laserData := l.laserObj.Data().(*engine.ObjectData)
+				delete(g.alienLasers, laserData.Index)
 				g.space.Remove(l.laserObj)
 				a.sprite = g.explosionSprite
 				g.score = g.score + 50
@@ -502,7 +504,7 @@ func (g *GameScene) isMeteorHitByPlayerLaser() {
 	for _, m := range g.meteors {
 		for _, l := range g.lasers {
 			if m.meteorObj.IsIntersecting(l.laserObj) {
-				if m.meteorObj.Tags().Has(TagSmall) {
+				if m.meteorObj.Tags().Has(engine.TagSmall) {
 					/* hit small meteor */
 					m.sprite = g.explosionSmallSprite
 					g.score++
@@ -524,12 +526,12 @@ func (g *GameScene) isMeteorHitByPlayerLaser() {
 						g.explosionPlayer.Play()
 					}
 
-					numToSpawn := rand.Intn(numberOfSmallMeteorsFromLargeMetoer)
+					numToSpawn := rand.Intn(numberOfSmallMeteorsFromLargeMeteor)
 					for range numToSpawn {
 						meteor := NewSmallMeteor(baseMeteorVelocity, g, len(m.game.meteors)-1)
-						meteor.position = Vector{
-							oldPos.X + float64(rand.Intn(100-50)) + 50,
-							oldPos.Y + float64(rand.Intn(100-50)) + 50,
+						meteor.position = engine.Vector{
+							X: oldPos.X + float64(rand.Intn(100-50)) + 50,
+							Y: oldPos.Y + float64(rand.Intn(100-50)) + 50,
 						}
 						meteor.meteorObj.SetPosition(meteor.position.X, meteor.position.Y)
 						g.space.Add(meteor.meteorObj)
@@ -544,15 +546,15 @@ func (g *GameScene) isMeteorHitByPlayerLaser() {
 }
 
 func (g *GameScene) bounceMeteor(m *Meteor) {
-	direction := Vector{
-		X: (ScreenWidth/2 - m.position.X) * -1,
-		Y: (ScreenHeight/2 - m.position.Y) * -1,
+	direction := engine.Vector{
+		X: (engine.ScreenWidth/2 - m.position.X) * -1,
+		Y: (engine.ScreenHeight/2 - m.position.Y) * -1,
 	}
 
 	normalized := direction.Normalize()
 	velocity := g.baseVelocity
 
-	movement := Vector{
+	movement := engine.Vector{
 		X: normalized.X * velocity,
 		Y: normalized.Y * velocity,
 	}
@@ -619,7 +621,7 @@ func (g *GameScene) letAliensAttack() {
 				offsetX := float64(a.sprite.Bounds().Dx() - int(halfW))
 				offsetY := float64(a.sprite.Bounds().Dy() - int(halfH))
 
-				spawnPos := Vector{
+				spawnPos := engine.Vector{
 					X: a.position.X + halfW + math.Sin(r) - offsetX,
 					Y: a.position.Y + halfH + math.Cos(r) - offsetY,
 				}
@@ -671,7 +673,7 @@ func (g *GameScene) isPlayerDead(state *State) {
 	if g.player.livesRemaining == 0 {
 		/* check for highscore */
 		if g.score > originalHighScore {
-			err := updateHighScore(g.score)
+			err := highscore.Update(g.score)
 			if err != nil {
 				log.Println(err)
 			}
@@ -716,7 +718,7 @@ func (g *GameScene) isLevelComplete(state *State) {
 				x := float64(20 + len(g.player.lifeIndicators)*50)
 				y := 20.0
 
-				g.player.lifeIndicators = append(g.player.lifeIndicators, NewLifeIndicator(Vector{
+				g.player.lifeIndicators = append(g.player.lifeIndicators, NewLifeIndicator(engine.Vector{
 					X: x,
 					Y: y,
 				}))
@@ -727,7 +729,7 @@ func (g *GameScene) isLevelComplete(state *State) {
 
 		state.SceneManager.GoToScene(&LevelStartsScene{
 			game:           g,
-			nextLevelTimer: NewTimer(time.Second * 2),
+			nextLevelTimer: engine.NewTimer(time.Second * 2),
 			stars:          GenerateStars(numberOfStars),
 		})
 	}
