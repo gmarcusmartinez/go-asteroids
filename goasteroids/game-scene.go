@@ -42,7 +42,7 @@ type GameScene struct {
 	meteorSpawnTimer     *engine.Timer
 	velocityTimer        *engine.Timer
 	space                *resolv.Space
-	lasers               map[int]*Laser
+	lasers               map[int]*entity.Laser
 	laserCount           int
 	score                int
 	explosionSprite      *ebiten.Image
@@ -87,7 +87,7 @@ func NewGameScene() *GameScene {
 		meteorSpawnTimer:     engine.NewTimer(meteorSpawnTime),
 		velocityTimer:        engine.NewTimer(meteorSpeedUpTime),
 		space:                resolv.NewSpace(engine.ScreenWidth, engine.ScreenHeight, 16, 16),
-		lasers:               make(map[int]*Laser),
+		lasers:               make(map[int]*entity.Laser),
 		laserCount:           0,
 		explosionSprite:      assets.ExplosionSprite,
 		explosionSmallSprite: assets.ExplosionSmallSprite,
@@ -412,11 +412,11 @@ func (g *GameScene) removeOffscreenAliens() {
 
 func (g *GameScene) removeOffscreenLasers() {
 	for i, l := range g.lasers {
-		if l.position.X > engine.ScreenWidth+200 ||
-			l.position.Y > engine.ScreenHeight+200 ||
-			l.position.X < -200 ||
-			l.position.Y < -200 {
-			g.space.Remove(l.laserObj)
+		if l.Position.X > engine.ScreenWidth+200 ||
+			l.Position.Y > engine.ScreenHeight+200 ||
+			l.Position.X < -200 ||
+			l.Position.Y < -200 {
+			g.space.Remove(l.Obj)
 			delete(g.lasers, i)
 
 		}
@@ -496,10 +496,10 @@ func (g *GameScene) isPlayerHitByAlienLaser() {
 func (g *GameScene) isAlienHitByPlayerLaser() {
 	for _, a := range g.aliens {
 		for _, l := range g.lasers {
-			if a.alienObj.IsIntersecting(l.laserObj) {
-				laserData := l.laserObj.Data().(*engine.ObjectData)
+			if a.alienObj.IsIntersecting(l.Obj) {
+				laserData := l.Obj.Data().(*engine.ObjectData)
 				delete(g.alienLasers, laserData.Index)
-				g.space.Remove(l.laserObj)
+				g.space.Remove(l.Obj)
 				a.sprite = g.explosionSprite
 				g.score = g.score + 50
 
@@ -516,7 +516,7 @@ func (g *GameScene) isAlienHitByPlayerLaser() {
 func (g *GameScene) isMeteorHitByPlayerLaser() {
 	for _, m := range g.meteors {
 		for _, l := range g.lasers {
-			if m.Obj.IsIntersecting(l.laserObj) {
+			if m.Obj.IsIntersecting(l.Obj) {
 				if m.Obj.Tags().Has(engine.TagSmall) {
 					/* hit small meteor */
 					m.Sprite = g.explosionSmallSprite
@@ -752,7 +752,7 @@ func (g *GameScene) Reset() {
 	g.player = NewPlayer(g)
 	g.meteors = make(map[int]*entity.Meteor)
 	g.meteorCount = 0
-	g.lasers = make(map[int]*Laser)
+	g.lasers = make(map[int]*entity.Laser)
 	g.laserCount = 0
 	g.score = 0
 	g.baseVelocity = baseMeteorVelocity

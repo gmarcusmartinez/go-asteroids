@@ -1,4 +1,4 @@
-package goasteroids
+package entity
 
 import (
 	"go-asteroids/assets"
@@ -14,14 +14,13 @@ const (
 )
 
 type Laser struct {
-	game     *GameScene
-	position engine.Vector
+	Position engine.Vector
 	rotation float64
 	sprite   *ebiten.Image
-	laserObj *resolv.ConvexPolygon
+	Obj      *resolv.ConvexPolygon
 }
 
-func NewLaser(pos engine.Vector, rotation float64, index int, g *GameScene) *Laser {
+func NewLaser(pos engine.Vector, rotation float64, index int) *Laser {
 	/* set the sprite */
 	sprite := assets.LaserSprite
 
@@ -35,17 +34,16 @@ func NewLaser(pos engine.Vector, rotation float64, index int, g *GameScene) *Las
 
 	/* create a laser obj */
 	l := &Laser{
-		game:     g,
-		position: pos,
+		Position: pos,
 		rotation: rotation,
 		sprite:   sprite,
-		laserObj: resolv.NewRectangle(pos.X, pos.Y, float64(sprite.Bounds().Dx()), float64(sprite.Bounds().Dy())),
+		Obj:      resolv.NewRectangle(pos.X, pos.Y, float64(sprite.Bounds().Dx()), float64(sprite.Bounds().Dy())),
 	}
 
 	/* set the position of the collision obj */
-	l.laserObj.SetPosition(pos.X, pos.Y)
-	l.laserObj.SetData(&engine.ObjectData{Index: index})
-	l.laserObj.Tags().Set(engine.TagLaser)
+	l.Obj.SetPosition(pos.X, pos.Y)
+	l.Obj.SetData(&engine.ObjectData{Index: index})
+	l.Obj.Tags().Set(engine.TagLaser)
 
 	return l
 
@@ -57,10 +55,10 @@ func (l *Laser) Update() {
 	dx := math.Sin(l.rotation) * speed
 	dy := math.Cos(l.rotation) * -speed
 
-	l.position.X += dx
-	l.position.Y += dy
+	l.Position.X += dx
+	l.Position.Y += dy
 
-	l.laserObj.SetPosition(l.position.X, l.position.Y)
+	l.Obj.SetPosition(l.Position.X, l.Position.Y)
 }
 
 func (l *Laser) Draw(screen *ebiten.Image) {
@@ -72,7 +70,7 @@ func (l *Laser) Draw(screen *ebiten.Image) {
 	op.GeoM.Translate(-halfW, -halfH)
 	op.GeoM.Rotate(l.rotation)
 	op.GeoM.Translate(halfW, halfH)
-	op.GeoM.Translate(l.position.X, l.position.Y)
+	op.GeoM.Translate(l.Position.X, l.Position.Y)
 
 	screen.DrawImage(l.sprite, op)
 

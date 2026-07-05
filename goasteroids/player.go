@@ -327,10 +327,10 @@ func (p *Player) fireLasers() {
 			}
 
 			p.game.laserCount++
-			laser := NewLaser(spawnPos, p.rotation, p.game.laserCount, p.game)
+			laser := entity.NewLaser(spawnPos, p.rotation, p.game.laserCount)
 			p.game.lasers[p.game.laserCount] = laser
 
-			p.game.space.Add(laser.laserObj)
+			p.game.space.Add(laser.Obj)
 
 			switch p.shotsFired {
 			case 1:

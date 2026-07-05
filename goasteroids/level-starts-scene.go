@@ -60,7 +60,7 @@ func (l *LevelStartsScene) clearLasers(state *State) {
 	/* clear lasers */
 	for k, v := range l.game.lasers {
 		delete(l.game.lasers, k)
-		l.game.space.Remove(v.laserObj)
+		l.game.space.Remove(v.Obj)
 	}
 
 	state.SceneManager.GoToScene(l.game)
