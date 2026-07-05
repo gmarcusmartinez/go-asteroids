@@ -1,4 +1,4 @@
-package goasteroids
+package entity
 
 import (
 	"go-asteroids/assets"
@@ -11,16 +11,15 @@ import (
 )
 
 type Alien struct {
-	game          *GameScene
-	sprite        *ebiten.Image
-	alienObj      *resolv.Circle
-	position      engine.Vector
+	Sprite        *ebiten.Image
+	Obj           *resolv.Circle
+	Position      engine.Vector
 	angle         float64
 	movement      engine.Vector
-	isIntelligent bool
+	IsIntelligent bool
 }
 
-func NewAlien(baseVelocity float64, g *GameScene) *Alien {
+func NewAlien(baseVelocity float64, playerPos engine.Vector) *Alien {
 	var alien Alien
 
 	alienType := rand.Intn(3)
@@ -39,15 +38,14 @@ func NewAlien(baseVelocity float64, g *GameScene) *Alien {
 		movement := engine.Vector{X: target.X - velocity, Y: 0}
 
 		alien = Alien{
-			game:          g,
-			sprite:        sprite,
-			position:      pos,
-			alienObj:      resolv.NewCircle(pos.X, pos.Y, float64(sprite.Bounds().Dx()/2)),
+			Sprite:        sprite,
+			Position:      pos,
+			Obj:           resolv.NewCircle(pos.X, pos.Y, float64(sprite.Bounds().Dx()/2)),
 			movement:      movement,
-			isIntelligent: false,
+			IsIntelligent: false,
 		}
 
-		alien.alienObj.SetPosition(pos.X, pos.Y)
+		alien.Obj.SetPosition(pos.X, pos.Y)
 	case 1:
 		/* comes in from left shoots random */
 		x := float64(-100)
@@ -59,15 +57,14 @@ func NewAlien(baseVelocity float64, g *GameScene) *Alien {
 		movement := engine.Vector{X: target.X + velocity, Y: 0}
 
 		alien = Alien{
-			game:          g,
-			sprite:        sprite,
-			position:      pos,
-			alienObj:      resolv.NewCircle(pos.X, pos.Y, float64(sprite.Bounds().Dx()/2)),
+			Sprite:        sprite,
+			Position:      pos,
+			Obj:           resolv.NewCircle(pos.X, pos.Y, float64(sprite.Bounds().Dx()/2)),
 			movement:      movement,
-			isIntelligent: false,
+			IsIntelligent: false,
 		}
 
-		alien.alienObj.SetPosition(pos.X, pos.Y)
+		alien.Obj.SetPosition(pos.X, pos.Y)
 	case 2:
 		/* Intelligent Alien */
 		middle := engine.Vector{
@@ -84,7 +81,7 @@ func NewAlien(baseVelocity float64, g *GameScene) *Alien {
 		}
 
 		velocity := baseVelocity + rand.Float64()*1.5
-		target := g.player.position
+		target := playerPos
 
 		direction := engine.Vector{
 			X: target.X - pos.X,
@@ -98,19 +95,18 @@ func NewAlien(baseVelocity float64, g *GameScene) *Alien {
 		}
 
 		alien = Alien{
-			game:          g,
-			sprite:        sprite,
-			position:      pos,
-			alienObj:      resolv.NewCircle(pos.X, pos.Y, float64(sprite.Bounds().Dx()/2)),
+			Sprite:        sprite,
+			Position:      pos,
+			Obj:           resolv.NewCircle(pos.X, pos.Y, float64(sprite.Bounds().Dx()/2)),
 			angle:         angle,
 			movement:      movement,
-			isIntelligent: true,
+			IsIntelligent: true,
 		}
 
-		alien.alienObj.SetPosition(pos.X, pos.Y)
+		alien.Obj.SetPosition(pos.X, pos.Y)
 	}
 
-	alien.alienObj.Tags().Set(engine.TagAlien)
+	alien.Obj.Tags().Set(engine.TagAlien)
 	return &alien
 }
 
@@ -118,19 +114,19 @@ func (a *Alien) Update() {
 	dx := a.movement.X
 	dy := a.movement.Y
 
-	a.position.X += dx
-	a.position.Y += dy
+	a.Position.X += dx
+	a.Position.Y += dy
 
-	a.alienObj.SetPosition(a.position.X, a.position.Y)
+	a.Obj.SetPosition(a.Position.X, a.Position.Y)
 }
 
 func (a *Alien) Draw(screen *ebiten.Image) {
-	bounds := a.sprite.Bounds()
+	bounds := a.Sprite.Bounds()
 	halfW := float64(bounds.Dx()) / 2
 	halfH := float64(bounds.Dy()) / 2
 
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(-halfW, -halfH)
-	op.GeoM.Translate(a.position.X, a.position.Y)
-	screen.DrawImage(a.sprite, op)
+	op.GeoM.Translate(a.Position.X, a.Position.Y)
+	screen.DrawImage(a.Sprite, op)
 }

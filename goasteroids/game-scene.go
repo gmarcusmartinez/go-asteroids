@@ -73,7 +73,7 @@ type GameScene struct {
 	alienLasers          map[int]*entity.AlienLaser
 	alienSoundPlayer     *audio.Player
 	alienSpawnTimer      *engine.Timer
-	aliens               map[int]*Alien
+	aliens               map[int]*entity.Alien
 	highScore            int
 	originalHighScore    int
 }
@@ -96,7 +96,7 @@ func NewGameScene() *GameScene {
 		beatWaitTime:         baseBeatWaitTime,
 		stars:                entity.GenerateStars(numberOfStars),
 		currentLevel:         1,
-		aliens:               make(map[int]*Alien),
+		aliens:               make(map[int]*entity.Alien),
 		alienCount:           0,
 		alienLasers:          make(map[int]*entity.AlienLaser),
 		alienLaserCount:      0,
@@ -389,8 +389,8 @@ func (g *GameScene) spawnAliens() {
 		rnd := rand.Intn(100-1) + 1
 
 		if rnd > 50 {
-			a := NewAlien(baseAlienVelocity, g)
-			g.space.Add(a.alienObj)
+			a := entity.NewAlien(baseAlienVelocity, g.player.position)
+			g.space.Add(a.Obj)
 			g.alienCount++
 			g.aliens[g.alienCount] = a
 		}
@@ -399,11 +399,11 @@ func (g *GameScene) spawnAliens() {
 
 func (g *GameScene) removeOffscreenAliens() {
 	for i, a := range g.aliens {
-		if a.position.X > engine.ScreenWidth+200 ||
-			a.position.Y > engine.ScreenHeight+200 ||
-			a.position.X < -200 ||
-			a.position.Y < -200 {
-			g.space.Remove(a.alienObj)
+		if a.Position.X > engine.ScreenWidth+200 ||
+			a.Position.Y > engine.ScreenHeight+200 ||
+			a.Position.X < -200 ||
+			a.Position.Y < -200 {
+			g.space.Remove(a.Obj)
 			delete(g.aliens, i)
 
 		}
@@ -464,14 +464,14 @@ func (g *GameScene) isPlayerCollidingWithMeteor() {
 
 func (g *GameScene) isPlayerCollidingWithAlien() {
 	for _, a := range g.aliens {
-		if a.alienObj.IsIntersecting(g.player.playerObj) {
-			if !a.game.player.isShielded {
+		if a.Obj.IsIntersecting(g.player.playerObj) {
+			if !g.player.isShielded {
 				/* trigger dying animation */
-				a.game.player.isDying = true
+				g.player.isDying = true
 				/* play explosion sound */
-				if !a.game.explosionPlayer.IsPlaying() {
-					_ = a.game.explosionPlayer.Rewind()
-					a.game.explosionPlayer.Play()
+				if !g.explosionPlayer.IsPlaying() {
+					_ = g.explosionPlayer.Rewind()
+					g.explosionPlayer.Play()
 				}
 			}
 		}
@@ -496,11 +496,11 @@ func (g *GameScene) isPlayerHitByAlienLaser() {
 func (g *GameScene) isAlienHitByPlayerLaser() {
 	for _, a := range g.aliens {
 		for _, l := range g.lasers {
-			if a.alienObj.IsIntersecting(l.Obj) {
+			if a.Obj.IsIntersecting(l.Obj) {
 				laserData := l.Obj.Data().(*engine.ObjectData)
 				delete(g.alienLasers, laserData.Index)
 				g.space.Remove(l.Obj)
-				a.sprite = g.explosionSprite
+				a.Sprite = g.explosionSprite
 				g.score = g.score + 50
 
 				/* play explosion sound*/
@@ -589,9 +589,9 @@ func (g *GameScene) cleanupMeteorsAndAliens() {
 
 		/* clean up dead aliens */
 		for i, a := range g.aliens {
-			if a.sprite == g.explosionSprite || a.sprite == g.explosionSmallSprite {
+			if a.Sprite == g.explosionSprite || a.Sprite == g.explosionSmallSprite {
 				delete(g.aliens, i)
-				g.space.Remove(a.alienObj)
+				g.space.Remove(a.Obj)
 			}
 		}
 
@@ -614,29 +614,29 @@ func (g *GameScene) letAliensAttack() {
 			g.alienAttackTimer.Reset()
 
 			for _, a := range g.aliens {
-				bounds := a.sprite.Bounds()
+				bounds := a.Sprite.Bounds()
 				halfW := float64(bounds.Dx()) / 2
 				halfH := float64(bounds.Dy()) / 2
 
 				var degreesRadian float64
 
-				if !a.isIntelligent {
+				if !a.IsIntelligent {
 					/* fire in a random direction */
 					degreesRadian = rand.Float64() * (math.Pi * 2)
 				} else {
 					/* fire with some accuracy */
-					degreesRadian = math.Atan2(g.player.position.Y-a.position.Y, g.player.position.X-a.position.X)
+					degreesRadian = math.Atan2(g.player.position.Y-a.Position.Y, g.player.position.X-a.Position.X)
 					degreesRadian = degreesRadian - math.Pi*-0.5
 				}
 
 				r := degreesRadian
 
-				offsetX := float64(a.sprite.Bounds().Dx() - int(halfW))
-				offsetY := float64(a.sprite.Bounds().Dy() - int(halfH))
+				offsetX := float64(a.Sprite.Bounds().Dx() - int(halfW))
+				offsetY := float64(a.Sprite.Bounds().Dy() - int(halfH))
 
 				spawnPos := engine.Vector{
-					X: a.position.X + halfW + math.Sin(r) - offsetX,
-					Y: a.position.Y + halfH + math.Cos(r) - offsetY,
+					X: a.Position.X + halfW + math.Sin(r) - offsetX,
+					Y: a.Position.Y + halfH + math.Cos(r) - offsetY,
 				}
 
 				laser := entity.NewAlienLaser(spawnPos, r)
@@ -764,7 +764,7 @@ func (g *GameScene) Reset() {
 	g.space.Add(g.player.playerObj)
 	g.player.shieldsRemaining = numberOfShields
 	g.player.isShielded = false
-	g.aliens = make(map[int]*Alien)
+	g.aliens = make(map[int]*entity.Alien)
 	g.alienCount = 0
 	g.alienLasers = make(map[int]*entity.AlienLaser)
 	g.alienLaserCount = 0
