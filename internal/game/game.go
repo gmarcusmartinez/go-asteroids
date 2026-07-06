@@ -1,30 +1,21 @@
-package goasteroids
+package game
 
 import (
 	"go-asteroids/internal/engine"
-	"go-asteroids/internal/entity"
+	"go-asteroids/internal/scene"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type Game struct {
-	sceneManager *SceneManager
-	input        Input
+	sceneManager *scene.SceneManager
+	input        scene.Input
 }
-
-/* stub to satisfy interface */
-type Input struct{}
-
-func (i *Input) Update() {}
 
 func (g *Game) Update() error {
 	if g.sceneManager == nil {
-		g.sceneManager = &SceneManager{}
-		meteors := make(map[int]*entity.Meteor)
-		g.sceneManager.GoToScene(&TitleScene{
-			meteors: meteors,
-			stars:   entity.GenerateStars(numberOfStars),
-		})
+		g.sceneManager = &scene.SceneManager{}
+		g.sceneManager.GoToScene(scene.NewTitleScene())
 	}
 
 	g.input.Update()

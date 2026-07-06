@@ -1,4 +1,4 @@
-package goasteroids
+package scene
 
 import (
 	"go-asteroids/assets"

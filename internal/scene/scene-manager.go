@@ -1,4 +1,4 @@
-package goasteroids
+package scene
 
 import (
 	"go-asteroids/internal/engine"
@@ -22,6 +22,11 @@ type State struct {
 	SceneManager *SceneManager
 	Input        *Input
 }
+
+/* Input is a stub input source threaded through the scene manager. */
+type Input struct{}
+
+func (i *Input) Update() {}
 
 type SceneManager struct {
 	current         Scene

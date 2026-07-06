@@ -1,4 +1,4 @@
-package goasteroids
+package scene
 
 import (
 	"go-asteroids/assets"
@@ -15,6 +15,13 @@ type TitleScene struct {
 	meteors     map[int]*entity.Meteor
 	meteorCount int
 	stars       []*entity.Star
+}
+
+func NewTitleScene() *TitleScene {
+	return &TitleScene{
+		meteors: make(map[int]*entity.Meteor),
+		stars:   entity.GenerateStars(numberOfStars),
+	}
 }
 
 func (t *TitleScene) Draw(screen *ebiten.Image) {
