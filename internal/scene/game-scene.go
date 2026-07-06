@@ -161,6 +161,14 @@ func NewGameScene() *GameScene {
 
 /* --- entity.Scene implementation --- */
 
+// playOnce (re)starts p unless it is already playing.
+func playOnce(p *audio.Player) {
+	if !p.IsPlaying() {
+		_ = p.Rewind()
+		p.Play()
+	}
+}
+
 func (g *GameScene) SpawnLaser(pos engine.Vector, rotation float64) {
 	g.laserCount++
 	laser := entity.NewLaser(pos, rotation, g.laserCount)
@@ -187,10 +195,7 @@ func (g *GameScene) SetPlayerDead() {
 }
 
 func (g *GameScene) PlayThrust() {
-	if !g.thrustPlayer.IsPlaying() {
-		_ = g.thrustPlayer.Rewind()
-		g.thrustPlayer.Play()
-	}
+	playOnce(g.thrustPlayer)
 }
 
 func (g *GameScene) PauseThrust() {
@@ -202,28 +207,16 @@ func (g *GameScene) PauseThrust() {
 func (g *GameScene) PlayLaserSound(shot int) {
 	switch shot {
 	case 1:
-		if !g.laserOnePlayer.IsPlaying() {
-			_ = g.laserOnePlayer.Rewind()
-			g.laserOnePlayer.Play()
-		}
+		playOnce(g.laserOnePlayer)
 	case 2:
-		if !g.laserTwoPlayer.IsPlaying() {
-			_ = g.laserTwoPlayer.Rewind()
-			g.laserTwoPlayer.Play()
-		}
+		playOnce(g.laserTwoPlayer)
 	case 3:
-		if !g.laserThreePlayer.IsPlaying() {
-			_ = g.laserThreePlayer.Rewind()
-			g.laserThreePlayer.Play()
-		}
+		playOnce(g.laserThreePlayer)
 	}
 }
 
 func (g *GameScene) PlayShieldSound() {
-	if !g.shieldsUpPlayer.IsPlaying() {
-		_ = g.shieldsUpPlayer.Rewind()
-		g.shieldsUpPlayer.Play()
-	}
+	playOnce(g.shieldsUpPlayer)
 }
 
 func (g *GameScene) Update(state *State) error {
@@ -538,10 +531,7 @@ func (g *GameScene) cleanupMeteorsAndAliens() {
 
 func (g *GameScene) letAliensAttack() {
 	if len(g.aliens) > 0 {
-		if !g.alienSoundPlayer.IsPlaying() {
-			_ = g.alienSoundPlayer.Rewind()
-			g.alienSoundPlayer.Play()
-		}
+		playOnce(g.alienSoundPlayer)
 
 		/* update the alien attack timer */
 		g.alienAttackTimer.Update()
@@ -580,10 +570,7 @@ func (g *GameScene) letAliensAttack() {
 				g.alienLaserCount++
 				g.alienLasers[g.alienLaserCount] = laser
 
-				if !g.alienLaserPlayer.IsPlaying() {
-					_ = g.alienLaserPlayer.Rewind()
-					g.alienLaserPlayer.Play()
-				}
+				playOnce(g.alienLaserPlayer)
 			}
 		}
 	}

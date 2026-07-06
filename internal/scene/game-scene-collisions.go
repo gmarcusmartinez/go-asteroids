@@ -13,10 +13,7 @@ func (g *GameScene) isPlayerCollidingWithMeteor() {
 				/* trigger dying animation */
 				g.player.IsDying = true
 				/* play explosion sound */
-				if !g.explosionPlayer.IsPlaying() {
-					_ = g.explosionPlayer.Rewind()
-					g.explosionPlayer.Play()
-				}
+				playOnce(g.explosionPlayer)
 				break
 			} else {
 				/* bounce meteor if shielded */
@@ -33,10 +30,7 @@ func (g *GameScene) isPlayerCollidingWithAlien() {
 				/* trigger dying animation */
 				g.player.IsDying = true
 				/* play explosion sound */
-				if !g.explosionPlayer.IsPlaying() {
-					_ = g.explosionPlayer.Rewind()
-					g.explosionPlayer.Play()
-				}
+				playOnce(g.explosionPlayer)
 			}
 		}
 	}
@@ -48,10 +42,7 @@ func (g *GameScene) isPlayerHitByAlienLaser() {
 			if !g.player.IsShielded {
 				/* trigger dying animation */
 				g.player.IsDying = true
-				if !g.explosionPlayer.IsPlaying() {
-					_ = g.explosionPlayer.Rewind()
-					g.explosionPlayer.Play()
-				}
+				playOnce(g.explosionPlayer)
 			}
 		}
 	}
@@ -68,10 +59,7 @@ func (g *GameScene) isAlienHitByPlayerLaser() {
 				g.score = g.score + 50
 
 				/* play explosion sound*/
-				if !g.explosionPlayer.IsPlaying() {
-					_ = g.explosionPlayer.Rewind()
-					g.explosionPlayer.Play()
-				}
+				playOnce(g.explosionPlayer)
 			}
 		}
 	}
@@ -87,10 +75,7 @@ func (g *GameScene) isMeteorHitByPlayerLaser() {
 					g.score++
 
 					/* play explosion sound */
-					if !g.explosionPlayer.IsPlaying() {
-						_ = g.explosionPlayer.Rewind()
-						g.explosionPlayer.Play()
-					}
+					playOnce(g.explosionPlayer)
 				} else {
 					/* hit large meteor */
 					oldPos := m.Position
@@ -98,10 +83,7 @@ func (g *GameScene) isMeteorHitByPlayerLaser() {
 					g.score++
 
 					/* play explosion sound */
-					if !g.explosionPlayer.IsPlaying() {
-						_ = g.explosionPlayer.Rewind()
-						g.explosionPlayer.Play()
-					}
+					playOnce(g.explosionPlayer)
 
 					numToSpawn := rand.Intn(numberOfSmallMeteorsFromLargeMeteor)
 					for range numToSpawn {
