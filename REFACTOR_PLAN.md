@@ -129,10 +129,11 @@ handlers). Rough surface: `Meteor{Sprite,Position,Movement,Obj}`,
 ### Phase 3 — Extract `entity` package
 - [x] **3.1** Move pure entities first: `Star`, `Exhaust`, `AlienLaser`, 3× indicators (no interface needed) — committed separately (2458b62). Along the way: `AlienLaser.Position`/`LaserObj` exported (scene reach-in), `engine.MaxAcceleration` added as the shared thrust/exhaust const, `exhaustSpawnOffset` relocated to its sole user `player.go`.
 - [x] **3.2** Move `Meteor` — no scene reference since Phase 2, so it moved as a pure entity (bb6a793). Fields exported: `Obj`/`Sprite`/`Position`/`Movement`; `numberOfSmallMeteorsFromLargeMeteor` relocated to game-scene.go.
-- [ ] **3.3** Add `entity.Scene` interface + semantic audio methods (Fix 1)
-- [ ] **3.4** Move `Alien`, `Laser`, `Shield`, `Player`; export fields / add methods (Fix 2); swap `*GameScene` → `entity.Scene`
-- [ ] **3.5** `GameScene` implements `entity.Scene`
-- Risk: **medium-high**, concentrated in `Player`. Isolate the risky part in its own commit.
+- [x] **3.3** Move `Laser` — its `*GameScene` was dead, dropped it; pure move (ab81b0e). Exported `Obj`/`Position`.
+- [x] **3.4** Move `Alien` — `*GameScene` used only for `g.player.position` in the ctor, so `NewAlien` now takes the target position; pure move (22d1e1e). Exported `Obj`/`Position`/`Sprite`/`IsIntelligent`.
+- [x] **3.5** Extract `Player` + `Shield` behind `entity.Scene` (Fix 1) with semantic audio methods; `GameScene` implements it, asserted via `var _ entity.Scene` (3048bb6). Player exports the ~15 fields the scene reads (Fix 2); Shield holds `*Player` for geometry, space registration moved to `Scene.SetShield`.
+- Risk was **medium-high**, concentrated in `Player`. Landed isolated in 3048bb6.
+- ⚠️ Not yet smoke-tested — all four splits compile/vet/test clean but the game hasn't been run since Phase 1. Do a manual play-test (title → play → shield → shoot → hyperspace → die → game-over → restart) before relying on it.
 
 ### Phase 4 — Extract `scene` and `game`
 - [ ] `internal/scene` ← 4 scenes + `scene-manager.go`
