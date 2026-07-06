@@ -18,13 +18,8 @@ func NewExhaust(pos engine.Vector, rotation float64) *Exhaust {
 	/* set the sprite */
 	sprite := assets.ExhaustSprite
 
-	/* position x and y coords from center of sprite */
-	bounds := sprite.Bounds()
-	halfW := float64(bounds.Dx()) / 2
-	halfH := float64(bounds.Dy()) / 2
-
-	pos.X -= halfW
-	pos.Y -= halfH
+	/* shift to top-left so the sprite is centered on pos */
+	pos = engine.CenterSprite(pos, sprite)
 
 	/* create a exhaust obj */
 	return &Exhaust{

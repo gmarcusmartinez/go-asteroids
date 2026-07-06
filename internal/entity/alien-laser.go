@@ -24,13 +24,8 @@ func NewAlienLaser(pos engine.Vector, rotation float64) *AlienLaser {
 	/* set the sprite */
 	sprite := assets.AlienLaserSprite
 
-	/* position x and y coords from center of sprite */
-	bounds := sprite.Bounds()
-	halfW := float64(bounds.Dx()) / 2
-	halfH := float64(bounds.Dy()) / 2
-
-	pos.X -= halfW
-	pos.Y -= halfH
+	/* shift to top-left so the sprite is centered on pos */
+	pos = engine.CenterSprite(pos, sprite)
 
 	/* create an alien laser obj */
 	al := &AlienLaser{
