@@ -40,7 +40,7 @@ func NewAlien(baseVelocity float64, playerPos engine.Vector) *Alien {
 		alien = Alien{
 			Sprite:        sprite,
 			Position:      pos,
-			Obj:           resolv.NewCircle(pos.X, pos.Y, float64(sprite.Bounds().Dx()/2)),
+			Obj:           engine.CircleFor(sprite, pos),
 			movement:      movement,
 			IsIntelligent: false,
 		}
@@ -59,7 +59,7 @@ func NewAlien(baseVelocity float64, playerPos engine.Vector) *Alien {
 		alien = Alien{
 			Sprite:        sprite,
 			Position:      pos,
-			Obj:           resolv.NewCircle(pos.X, pos.Y, float64(sprite.Bounds().Dx()/2)),
+			Obj:           engine.CircleFor(sprite, pos),
 			movement:      movement,
 			IsIntelligent: false,
 		}
@@ -97,7 +97,7 @@ func NewAlien(baseVelocity float64, playerPos engine.Vector) *Alien {
 		alien = Alien{
 			Sprite:        sprite,
 			Position:      pos,
-			Obj:           resolv.NewCircle(pos.X, pos.Y, float64(sprite.Bounds().Dx()/2)),
+			Obj:           engine.CircleFor(sprite, pos),
 			angle:         angle,
 			movement:      movement,
 			IsIntelligent: true,

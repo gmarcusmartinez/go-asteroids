@@ -68,7 +68,7 @@ func NewPlayer(scene Scene) *Player {
 	}
 
 	/* create collision object */
-	playerObj := resolv.NewCircle(pos.X, pos.Y, float64(sprite.Bounds().Dx()/2))
+	playerObj := engine.CircleFor(sprite, pos)
 
 	/* setup life indicators*/
 	var lifeIndicators []*Indicator

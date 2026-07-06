@@ -32,7 +32,7 @@ func NewAlienLaser(pos engine.Vector, rotation float64) *AlienLaser {
 		Position: pos,
 		rotation: rotation,
 		sprite:   sprite,
-		LaserObj: resolv.NewRectangle(pos.X, pos.Y, float64(sprite.Bounds().Dx()), float64(sprite.Bounds().Dy())),
+		LaserObj: engine.RectangleFor(sprite, pos),
 	}
 
 	/* set the position of the collision obj */

@@ -72,7 +72,7 @@ func newMeteor(baseVelocity float64, index int, sprites []*ebiten.Image, sizeTag
 	sprite := sprites[rand.Intn(len(sprites))]
 
 	/* create the collision object */
-	meteorObj := resolv.NewCircle(pos.X, pos.Y, float64(sprite.Bounds().Dx()/2))
+	meteorObj := engine.CircleFor(sprite, pos)
 
 	/* create a meteor object and return */
 	m := &Meteor{
