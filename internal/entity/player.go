@@ -343,27 +343,8 @@ func (p *Player) isPlayerDead() {
 }
 
 func (p *Player) keepOnScreen() {
-	if p.Position.X >= float64(engine.ScreenWidth) {
-		p.Position.X = 0
-		p.PlayerObj.SetPosition(0, p.Position.Y)
-	}
-
-	if p.Position.X < 0 {
-		p.Position.X = engine.ScreenWidth
-		p.PlayerObj.SetPosition(engine.ScreenWidth, p.Position.Y)
-
-	}
-
-	if p.Position.Y >= float64(engine.ScreenHeight) {
-		p.Position.Y = 0
-		p.PlayerObj.SetPosition(p.Position.X, 0)
-
-	}
-
-	if p.Position.Y < 0 {
-		p.Position.Y = engine.ScreenHeight
-		p.PlayerObj.SetPosition(p.Position.X, engine.ScreenHeight)
-	}
+	p.Position = engine.WrapPosition(p.Position)
+	p.PlayerObj.SetPosition(p.Position.X, p.Position.Y)
 }
 
 func (p *Player) showExhaust() {

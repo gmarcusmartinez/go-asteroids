@@ -111,24 +111,6 @@ func (m *Meteor) Update() {
 }
 
 func (m *Meteor) keepOnScreen() {
-	if m.Position.X >= float64(engine.ScreenWidth) {
-		m.Position.X = 0
-		m.Obj.SetPosition(0, m.Position.Y)
-	}
-
-	if m.Position.X < 0 {
-		m.Position.X = engine.ScreenWidth
-		m.Obj.SetPosition(engine.ScreenWidth, m.Position.Y)
-	}
-
-	if m.Position.Y >= float64(engine.ScreenHeight) {
-		m.Position.Y = 0
-		m.Obj.SetPosition(m.Position.X, 0)
-	}
-
-	if m.Position.Y < 0 {
-		m.Position.Y = engine.ScreenHeight
-		m.Obj.SetPosition(m.Position.X, engine.ScreenHeight)
-
-	}
+	m.Position = engine.WrapPosition(m.Position)
+	m.Obj.SetPosition(m.Position.X, m.Position.Y)
 }
