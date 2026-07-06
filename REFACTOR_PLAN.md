@@ -135,10 +135,11 @@ handlers). Rough surface: `Meteor{Sprite,Position,Movement,Obj}`,
 - Risk was **medium-high**, concentrated in `Player`. Landed isolated in 3048bb6.
 - ⚠️ Not yet smoke-tested — all four splits compile/vet/test clean but the game hasn't been run since Phase 1. Do a manual play-test (title → play → shield → shoot → hyperspace → die → game-over → restart) before relying on it.
 
-### Phase 4 — Extract `scene` and `game`
-- [ ] `internal/scene` ← 4 scenes + `scene-manager.go`
-- [ ] `internal/game` ← `game.go` (or leave in root); update `main.go` import
-- Risk: **low** at this point — mechanical.
+### Phase 4 — Extract `scene` and `game` ✅ DONE (7af14ce)
+- [x] `internal/scene` ← 4 scenes + `scene-manager.go`. `Input` moved here (scene-manager depends on it → must sit below `game`); added `scene.NewTitleScene()` so `game` builds the first scene without reaching TitleScene's unexported fields.
+- [x] `internal/game` ← `game.go`; `main.go` builds `&game.Game{}`.
+- [x] `goasteroids` package fully dissolved; `go list -deps` confirms one-directional `main → game → scene → entity → engine`, no back-edges.
+- Risk: **low** — mechanical, as predicted.
 
 ### Phase 5 — Quality follow-ups (optional)
 - [ ] Collapse 3× near-identical `*Indicator` types into one generic `Indicator`
