@@ -141,10 +141,10 @@ handlers). Rough surface: `Meteor{Sprite,Position,Movement,Obj}`,
 - [x] `goasteroids` package fully dissolved; `go list -deps` confirms one-directional `main → game → scene → entity → engine`, no back-edges.
 - Risk: **low** — mechanical, as predicted.
 
-### Phase 5 — Quality follow-ups (optional)
-- [ ] Collapse 3× near-identical `*Indicator` types into one generic `Indicator`
-- [ ] Extract the 7× copied "translate/rotate/translate/draw" blit into `engine.DrawSprite(screen, img, pos, rotation)`
-- [ ] Consider splitting `game-scene.go` collision handlers into `game-scene-collisions.go`
+### Phase 5 — Quality follow-ups ✅ DONE
+- [x] Collapsed the 3 `*Indicator` types into one `entity.Indicator` (bcaf49b) — bodies were byte-identical; kept three named constructors for readable call sites.
+- [x] Extracted `engine.DrawSprite(screen, img, pos, rotation)` (2b2b077) — replaced the 5 exact-match blits (Meteor, Exhaust, Laser, Shield, Player). `Alien`/`AlienLaser` left as-is: their blits skip the translate-back, so routing them through `DrawSprite` would shift the sprite.
+- [x] Split the 6 collision handlers into `internal/scene/game-scene-collisions.go` (bb7e47e) — pure code motion; game-scene.go 839 → 706 lines.
 
 ---
 
