@@ -34,7 +34,7 @@ const (
 )
 
 type GameScene struct {
-	player               *Player
+	player               *entity.Player
 	baseVelocity         float64
 	meteors              map[int]*entity.Meteor
 	meteorCount          int
@@ -64,7 +64,7 @@ type GameScene struct {
 	playBeatOne          bool
 	stars                []*entity.Star
 	currentLevel         int
-	shield               *Shield
+	shield               *entity.Shield
 	shieldsUpPlayer      *audio.Player
 	alienAttackTimer     *engine.Timer
 	alienCount           int
@@ -77,6 +77,9 @@ type GameScene struct {
 	highScore            int
 	originalHighScore    int
 }
+
+/* GameScene satisfies the narrow view entities depend on. */
+var _ entity.Scene = (*GameScene)(nil)
 
 func NewGameScene() *GameScene {
 	g := &GameScene{
@@ -104,9 +107,9 @@ func NewGameScene() *GameScene {
 		alienAttackTimer:     engine.NewTimer(alienAttackTime),
 	}
 
-	g.player = NewPlayer(g)
+	g.player = entity.NewPlayer(g)
 
-	g.space.Add(g.player.playerObj)
+	g.space.Add(g.player.PlayerObj)
 
 	g.explosionFrames = assets.Explosion
 
@@ -154,6 +157,73 @@ func NewGameScene() *GameScene {
 	g.originalHighScore = hs
 
 	return g
+}
+
+/* --- entity.Scene implementation --- */
+
+func (g *GameScene) SpawnLaser(pos engine.Vector, rotation float64) {
+	g.laserCount++
+	laser := entity.NewLaser(pos, rotation, g.laserCount)
+	g.lasers[g.laserCount] = laser
+	g.space.Add(laser.Obj)
+}
+
+func (g *GameScene) SetExhaust(e *entity.Exhaust) {
+	g.exhaust = e
+}
+
+func (g *GameScene) SetShield(s *entity.Shield) {
+	g.space.Add(s.Obj)
+	g.shield = s
+}
+
+func (g *GameScene) ClearShield() {
+	g.space.Remove(g.shield.Obj)
+	g.shield = nil
+}
+
+func (g *GameScene) SetPlayerDead() {
+	g.playerIsDead = true
+}
+
+func (g *GameScene) PlayThrust() {
+	if !g.thrustPlayer.IsPlaying() {
+		_ = g.thrustPlayer.Rewind()
+		g.thrustPlayer.Play()
+	}
+}
+
+func (g *GameScene) PauseThrust() {
+	if g.thrustPlayer.IsPlaying() {
+		g.thrustPlayer.Pause()
+	}
+}
+
+func (g *GameScene) PlayLaserSound(shot int) {
+	switch shot {
+	case 1:
+		if !g.laserOnePlayer.IsPlaying() {
+			_ = g.laserOnePlayer.Rewind()
+			g.laserOnePlayer.Play()
+		}
+	case 2:
+		if !g.laserTwoPlayer.IsPlaying() {
+			_ = g.laserTwoPlayer.Rewind()
+			g.laserTwoPlayer.Play()
+		}
+	case 3:
+		if !g.laserThreePlayer.IsPlaying() {
+			_ = g.laserThreePlayer.Rewind()
+			g.laserThreePlayer.Play()
+		}
+	}
+}
+
+func (g *GameScene) PlayShieldSound() {
+	if !g.shieldsUpPlayer.IsPlaying() {
+		_ = g.shieldsUpPlayer.Rewind()
+		g.shieldsUpPlayer.Play()
+	}
 }
 
 func (g *GameScene) Update(state *State) error {
@@ -243,15 +313,15 @@ func (g *GameScene) Draw(screen *ebiten.Image) {
 	}
 
 	/* draw life indicators */
-	if len(g.player.lifeIndicators) > 0 {
-		for _, li := range g.player.lifeIndicators {
+	if len(g.player.LifeIndicators) > 0 {
+		for _, li := range g.player.LifeIndicators {
 			li.Draw(screen)
 		}
 	}
 
 	/* draw shield indicators */
-	if len(g.player.shieldIndicators) > 0 {
-		for _, si := range g.player.shieldIndicators {
+	if len(g.player.ShieldIndicators) > 0 {
+		for _, si := range g.player.ShieldIndicators {
 			si.Draw(screen)
 		}
 	}
@@ -267,8 +337,8 @@ func (g *GameScene) Draw(screen *ebiten.Image) {
 	}
 
 	/* draw hyperspace indicator */
-	if g.player.hyperspaceTimer == nil || g.player.hyperspaceTimer.IsReady() {
-		g.player.hyperspaceIndicator.Draw(screen)
+	if g.player.HyperspaceTimer == nil || g.player.HyperspaceTimer.IsReady() {
+		g.player.HyperspaceIndicator.Draw(screen)
 	}
 
 	/* draw score */
@@ -389,7 +459,7 @@ func (g *GameScene) spawnAliens() {
 		rnd := rand.Intn(100-1) + 1
 
 		if rnd > 50 {
-			a := entity.NewAlien(baseAlienVelocity, g.player.position)
+			a := entity.NewAlien(baseAlienVelocity, g.player.Position)
 			g.space.Add(a.Obj)
 			g.alienCount++
 			g.aliens[g.alienCount] = a
@@ -444,10 +514,10 @@ func (g *GameScene) speedUpMeteors() {
 
 func (g *GameScene) isPlayerCollidingWithMeteor() {
 	for _, m := range g.meteors {
-		if m.Obj.IsIntersecting(g.player.playerObj) {
-			if !g.player.isShielded {
+		if m.Obj.IsIntersecting(g.player.PlayerObj) {
+			if !g.player.IsShielded {
 				/* trigger dying animation */
-				g.player.isDying = true
+				g.player.IsDying = true
 				/* play explosion sound */
 				if !g.explosionPlayer.IsPlaying() {
 					_ = g.explosionPlayer.Rewind()
@@ -464,10 +534,10 @@ func (g *GameScene) isPlayerCollidingWithMeteor() {
 
 func (g *GameScene) isPlayerCollidingWithAlien() {
 	for _, a := range g.aliens {
-		if a.Obj.IsIntersecting(g.player.playerObj) {
-			if !g.player.isShielded {
+		if a.Obj.IsIntersecting(g.player.PlayerObj) {
+			if !g.player.IsShielded {
 				/* trigger dying animation */
-				g.player.isDying = true
+				g.player.IsDying = true
 				/* play explosion sound */
 				if !g.explosionPlayer.IsPlaying() {
 					_ = g.explosionPlayer.Rewind()
@@ -480,10 +550,10 @@ func (g *GameScene) isPlayerCollidingWithAlien() {
 
 func (g *GameScene) isPlayerHitByAlienLaser() {
 	for _, al := range g.alienLasers {
-		if al.LaserObj.IsIntersecting(g.player.playerObj) {
-			if !g.player.isShielded {
+		if al.LaserObj.IsIntersecting(g.player.PlayerObj) {
+			if !g.player.IsShielded {
 				/* trigger dying animation */
-				g.player.isDying = true
+				g.player.IsDying = true
 				if !g.explosionPlayer.IsPlaying() {
 					_ = g.explosionPlayer.Rewind()
 					g.explosionPlayer.Play()
@@ -625,7 +695,7 @@ func (g *GameScene) letAliensAttack() {
 					degreesRadian = rand.Float64() * (math.Pi * 2)
 				} else {
 					/* fire with some accuracy */
-					degreesRadian = math.Atan2(g.player.position.Y-a.Position.Y, g.player.position.X-a.Position.X)
+					degreesRadian = math.Atan2(g.player.Position.Y-a.Position.Y, g.player.Position.X-a.Position.X)
 					degreesRadian = degreesRadian - math.Pi*-0.5
 				}
 
@@ -655,35 +725,35 @@ func (g *GameScene) letAliensAttack() {
 func (g *GameScene) isPlayerDying() {
 	const maxDyingFrames = 12
 
-	if !g.player.isDying {
+	if !g.player.IsDying {
 		return
 	}
 
-	g.player.dyingTimer.Update()
-	if !g.player.dyingTimer.IsReady() {
+	g.player.DyingTimer.Update()
+	if !g.player.DyingTimer.IsReady() {
 		return
 	}
 
-	g.player.dyingTimer.Reset()
-	g.player.dyingCounter++
+	g.player.DyingTimer.Reset()
+	g.player.DyingCounter++
 
-	if g.player.dyingCounter == maxDyingFrames {
-		g.player.isDying = false
-		g.player.isDead = true
+	if g.player.DyingCounter == maxDyingFrames {
+		g.player.IsDying = false
+		g.player.IsDead = true
 		return
 	}
 
 	/* run animation */
-	g.player.sprite = g.explosionFrames[g.player.dyingCounter]
+	g.player.Sprite = g.explosionFrames[g.player.DyingCounter]
 }
 
 func (g *GameScene) isPlayerDead(state *State) {
-	if !g.player.isDead {
+	if !g.player.IsDead {
 		return
 	}
-	g.player.livesRemaining--
+	g.player.LivesRemaining--
 
-	if g.player.livesRemaining == 0 {
+	if g.player.LivesRemaining == 0 {
 		/* check for highscore */
 		if g.score > g.originalHighScore {
 			err := highscore.Update(g.score)
@@ -702,19 +772,19 @@ func (g *GameScene) isPlayerDead(state *State) {
 	} else {
 		/* decrement lives remaining */
 		score := g.score
-		livesRemaining := g.player.livesRemaining
-		lifeSlice := g.player.lifeIndicators[:len(g.player.lifeIndicators)-1]
+		livesRemaining := g.player.LivesRemaining
+		lifeSlice := g.player.LifeIndicators[:len(g.player.LifeIndicators)-1]
 		stars := g.stars
-		shieldsRemaining := g.player.shieldsRemaining
-		shieldIndicatorSlice := g.player.shieldIndicators
+		shieldsRemaining := g.player.ShieldsRemaining
+		shieldIndicatorSlice := g.player.ShieldIndicators
 
 		g.Reset()
-		g.player.livesRemaining = livesRemaining
+		g.player.LivesRemaining = livesRemaining
 		g.score = score
-		g.player.lifeIndicators = lifeSlice
+		g.player.LifeIndicators = lifeSlice
 		g.stars = stars
-		g.player.shieldsRemaining = shieldsRemaining
-		g.player.shieldIndicators = shieldIndicatorSlice
+		g.player.ShieldsRemaining = shieldsRemaining
+		g.player.ShieldIndicators = shieldIndicatorSlice
 	}
 
 }
@@ -725,13 +795,13 @@ func (g *GameScene) isLevelComplete(state *State) {
 		g.currentLevel++
 
 		if g.currentLevel%5 == 0 {
-			if g.player.livesRemaining < 6 {
-				g.player.livesRemaining++
+			if g.player.LivesRemaining < 6 {
+				g.player.LivesRemaining++
 
-				x := float64(20 + len(g.player.lifeIndicators)*50)
+				x := float64(20 + len(g.player.LifeIndicators)*50)
 				y := 20.0
 
-				g.player.lifeIndicators = append(g.player.lifeIndicators, entity.NewLifeIndicator(engine.Vector{
+				g.player.LifeIndicators = append(g.player.LifeIndicators, entity.NewLifeIndicator(engine.Vector{
 					X: x,
 					Y: y,
 				}))
@@ -749,7 +819,7 @@ func (g *GameScene) isLevelComplete(state *State) {
 }
 
 func (g *GameScene) Reset() {
-	g.player = NewPlayer(g)
+	g.player = entity.NewPlayer(g)
 	g.meteors = make(map[int]*entity.Meteor)
 	g.meteorCount = 0
 	g.lasers = make(map[int]*entity.Laser)
@@ -761,9 +831,7 @@ func (g *GameScene) Reset() {
 	g.playerIsDead = false
 	g.exhaust = nil
 	g.space.RemoveAll()
-	g.space.Add(g.player.playerObj)
-	g.player.shieldsRemaining = numberOfShields
-	g.player.isShielded = false
+	g.space.Add(g.player.PlayerObj)
 	g.aliens = make(map[int]*entity.Alien)
 	g.alienCount = 0
 	g.alienLasers = make(map[int]*entity.AlienLaser)
