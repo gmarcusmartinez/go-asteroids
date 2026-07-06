@@ -142,18 +142,7 @@ func NewSmallMeteor(baseVelocity float64, index int) *Meteor {
 }
 
 func (m *Meteor) Draw(screen *ebiten.Image) {
-	bounds := m.Sprite.Bounds()
-	halfW := float64(bounds.Dx()) / 2
-	halfH := float64(bounds.Dy()) / 2
-
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(-halfW, -halfH)
-	op.GeoM.Rotate(m.rotation)
-	op.GeoM.Translate(halfW, halfH)
-
-	op.GeoM.Translate(m.Position.X, m.Position.Y)
-	screen.DrawImage(m.Sprite, op)
-
+	engine.DrawSprite(screen, m.Sprite, m.Position, m.rotation)
 }
 
 func (m *Meteor) Update() {

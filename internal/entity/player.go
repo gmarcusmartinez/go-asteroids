@@ -124,19 +124,7 @@ func NewPlayer(scene Scene) *Player {
 }
 
 func (p *Player) Draw(screen *ebiten.Image) {
-	bounds := p.Sprite.Bounds()
-	halfW := float64(bounds.Dx()) / 2
-	halfH := float64(bounds.Dy()) / 2
-
-	op := &ebiten.DrawImageOptions{}
-
-	op.GeoM.Translate(-halfW, -halfH)
-	op.GeoM.Rotate(p.Rotation)
-	op.GeoM.Translate(halfW, halfH)
-
-	op.GeoM.Translate(p.Position.X, p.Position.Y)
-
-	screen.DrawImage(p.Sprite, op)
+	engine.DrawSprite(screen, p.Sprite, p.Position, p.Rotation)
 }
 
 func (p *Player) Update() {

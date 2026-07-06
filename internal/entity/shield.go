@@ -50,16 +50,5 @@ func (s *Shield) Update() {
 }
 
 func (s *Shield) Draw(screen *ebiten.Image) {
-	bounds := s.sprite.Bounds()
-	halfW := float64(bounds.Dx()) / 2
-	halfH := float64(bounds.Dy()) / 2
-
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(-halfW, -halfH)
-	op.GeoM.Rotate(s.rotation)
-	op.GeoM.Translate(halfW, halfH)
-	op.GeoM.Translate(s.position.X, s.position.Y)
-
-	screen.DrawImage(s.sprite, op)
-
+	engine.DrawSprite(screen, s.sprite, s.position, s.rotation)
 }

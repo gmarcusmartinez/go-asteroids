@@ -62,16 +62,5 @@ func (l *Laser) Update() {
 }
 
 func (l *Laser) Draw(screen *ebiten.Image) {
-	bounds := l.sprite.Bounds()
-	halfW := float64(bounds.Dx()) / 2
-	halfH := float64(bounds.Dy()) / 2
-
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(-halfW, -halfH)
-	op.GeoM.Rotate(l.rotation)
-	op.GeoM.Translate(halfW, halfH)
-	op.GeoM.Translate(l.Position.X, l.Position.Y)
-
-	screen.DrawImage(l.sprite, op)
-
+	engine.DrawSprite(screen, l.sprite, l.Position, l.rotation)
 }
