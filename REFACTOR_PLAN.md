@@ -107,7 +107,7 @@ handlers). Rough surface: `Meteor{Sprite,Position,Movement,Obj}`,
 - [x] Baseline: `go build ./...` + `go vet ./...` clean
 - [x] Unit tests for pure logic (`vector_test.go`, `timer_test.go`)
 - [x] Typo fixes: `roataionSpeed*`, `numberOfSmallMeteorsFromLargeMetoer`, `"Wellcome to Hell"`
-- [ ] Manual smoke play-test (`go run .`: title → play → die → game-over → restart)
+- [x] Manual smoke play-test (`go run .`: title → play → die → game-over → restart) — verified post-refactor; plays as before
 - Deferred to Phase 1: `checkCollision` dead-branch removal (moves to `engine` anyway)
 
 ### Phase 1 — Extract leaf packages ⭐ recommended minimum ✅ DONE
@@ -133,7 +133,7 @@ handlers). Rough surface: `Meteor{Sprite,Position,Movement,Obj}`,
 - [x] **3.4** Move `Alien` — `*GameScene` used only for `g.player.position` in the ctor, so `NewAlien` now takes the target position; pure move (22d1e1e). Exported `Obj`/`Position`/`Sprite`/`IsIntelligent`.
 - [x] **3.5** Extract `Player` + `Shield` behind `entity.Scene` (Fix 1) with semantic audio methods; `GameScene` implements it, asserted via `var _ entity.Scene` (3048bb6). Player exports the ~15 fields the scene reads (Fix 2); Shield holds `*Player` for geometry, space registration moved to `Scene.SetShield`.
 - Risk was **medium-high**, concentrated in `Player`. Landed isolated in 3048bb6.
-- ⚠️ Not yet smoke-tested — all four splits compile/vet/test clean but the game hasn't been run since Phase 1. Do a manual play-test (title → play → shield → shoot → hyperspace → die → game-over → restart) before relying on it.
+- ✅ Smoke-tested after Phase 5: game plays as before (title → play → shield → shoot → hyperspace → die → game-over → restart) — audio, shield positioning, and sprite rendering all correct.
 
 ### Phase 4 — Extract `scene` and `game` ✅ DONE (7af14ce)
 - [x] `internal/scene` ← 4 scenes + `scene-manager.go`. `Input` moved here (scene-manager depends on it → must sit below `game`); added `scene.NewTitleScene()` so `game` builds the first scene without reaching TitleScene's unexported fields.
