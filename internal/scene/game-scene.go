@@ -159,9 +159,6 @@ func NewGameScene() *GameScene {
 	return g
 }
 
-/* --- entity.Scene implementation --- */
-
-// playOnce (re)starts p unless it is already playing.
 func playOnce(p *audio.Player) {
 	if !p.IsPlaying() {
 		_ = p.Rewind()

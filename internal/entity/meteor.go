@@ -26,64 +26,14 @@ type Meteor struct {
 }
 
 func NewMeteor(baseVelocity float64, index int) *Meteor {
-	/* target the center of the screen */
-	target := engine.Vector{
-		X: engine.ScreenWidth / 2,
-		Y: engine.ScreenHeight / 2,
-	}
-
-	/* pick a random angle */
-	angle := rand.Float64() * 2 * math.Pi
-
-	/* spawn distance from center */
-	r := engine.ScreenWidth/2.0 + 500
-
-	/* create the position vector */
-	pos := engine.Vector{
-		X: target.X + math.Cos(angle)*r,
-		Y: target.Y + math.Sin(angle)*r,
-	}
-
-	/* give meteor random velocity */
-	velocity := baseVelocity + rand.Float64()*1.5
-
-	/* create and normalize direction vector */
-	direction := engine.Vector{
-		X: target.X - pos.X,
-		Y: target.Y - pos.Y,
-	}
-	normalizedDirection := direction.Normalize()
-
-	/* create movement vector */
-	movement := engine.Vector{
-		X: normalizedDirection.X * velocity,
-		Y: normalizedDirection.Y * velocity,
-	}
-
-	/* assign a sprite to the meteor */
-	sprite := assets.MeteorSprites[rand.Intn(len(assets.MeteorSprites))]
-
-	/* create the collision object */
-	meteorObj := resolv.NewCircle(pos.X, pos.Y, float64(sprite.Bounds().Dx()/2))
-
-	/* create a meteor object and return */
-	m := &Meteor{
-		Position:      pos,
-		angle:         angle,
-		Movement:      movement,
-		rotationSpeed: rotationSpeedMin + rand.Float64()*(rotationSpeedMax-rotationSpeedMin),
-		Sprite:        sprite,
-		Obj:           meteorObj,
-	}
-
-	m.Obj.SetPosition(pos.X, pos.Y)
-	m.Obj.Tags().Set(engine.TagMeteor | engine.TagLarge)
-	m.Obj.SetData(&engine.ObjectData{Index: index})
-
-	return m
+	return newMeteor(baseVelocity, index, assets.MeteorSprites, engine.TagLarge)
 }
 
 func NewSmallMeteor(baseVelocity float64, index int) *Meteor {
+	return newMeteor(baseVelocity, index, assets.MeteorSpritesSmall, engine.TagSmall)
+}
+
+func newMeteor(baseVelocity float64, index int, sprites []*ebiten.Image, sizeTag resolv.Tags) *Meteor {
 	/* target the center of the screen */
 	target := engine.Vector{
 		X: engine.ScreenWidth / 2,
@@ -119,7 +69,7 @@ func NewSmallMeteor(baseVelocity float64, index int) *Meteor {
 	}
 
 	/* assign a sprite to the meteor */
-	sprite := assets.MeteorSpritesSmall[rand.Intn(len(assets.MeteorSpritesSmall))]
+	sprite := sprites[rand.Intn(len(sprites))]
 
 	/* create the collision object */
 	meteorObj := resolv.NewCircle(pos.X, pos.Y, float64(sprite.Bounds().Dx()/2))
@@ -135,7 +85,7 @@ func NewSmallMeteor(baseVelocity float64, index int) *Meteor {
 	}
 
 	m.Obj.SetPosition(pos.X, pos.Y)
-	m.Obj.Tags().Set(engine.TagMeteor | engine.TagSmall)
+	m.Obj.Tags().Set(engine.TagMeteor | sizeTag)
 	m.Obj.SetData(&engine.ObjectData{Index: index})
 
 	return m
