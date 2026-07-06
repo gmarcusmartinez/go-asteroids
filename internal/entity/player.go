@@ -44,11 +44,11 @@ type Player struct {
 	DyingTimer          *engine.Timer
 	DyingCounter        int
 	LivesRemaining      int
-	LifeIndicators      []*LifeIndicator
+	LifeIndicators      []*Indicator
 	shieldTimer         *engine.Timer
 	ShieldsRemaining    int
-	ShieldIndicators    []*ShieldIndicator
-	HyperspaceIndicator *HyperspaceIndicator
+	ShieldIndicators    []*Indicator
+	HyperspaceIndicator *Indicator
 	HyperspaceTimer     *engine.Timer
 	driftAngle          float64
 	driftTimer          *engine.Timer
@@ -71,7 +71,7 @@ func NewPlayer(scene Scene) *Player {
 	playerObj := resolv.NewCircle(pos.X, pos.Y, float64(sprite.Bounds().Dx()/2))
 
 	/* setup life indicators*/
-	var lifeIndicators []*LifeIndicator
+	var lifeIndicators []*Indicator
 	var xPosition = 20.0
 
 	for range numberOfLives {
@@ -84,7 +84,7 @@ func NewPlayer(scene Scene) *Player {
 	}
 
 	/* setup shield indicators*/
-	var shieldIndicators []*ShieldIndicator
+	var shieldIndicators []*Indicator
 	xPosition = 45.0
 
 	for range numberOfShields {
