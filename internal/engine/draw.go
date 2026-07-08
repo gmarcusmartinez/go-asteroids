@@ -2,8 +2,6 @@ package engine
 
 import "github.com/hajimehoshi/ebiten/v2"
 
-// CenterSprite returns the top-left position at which img should be placed so
-// that it is centered on center.
 func CenterSprite(center Vector, img *ebiten.Image) Vector {
 	bounds := img.Bounds()
 	return Vector{
