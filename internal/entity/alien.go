@@ -26,12 +26,15 @@ func NewAlien(baseVelocity float64, playerPos engine.Vector) *Alien {
 	var angle float64
 	var intelligent bool
 
+	fromRight := float64(engine.ScreenWidth + 100)
+	fromLeft := float64(-100)
+
 	switch rand.Intn(3) {
-	case 0: // comes in from the right, shoots random
-		pos, movement = edgeSpawn(float64(engine.ScreenWidth+100), baseVelocity, -1)
-	case 1: // comes in from the left, shoots random
-		pos, movement = edgeSpawn(-100, baseVelocity, +1)
-	case 2: // intelligent alien
+	case 0:
+		pos, movement = edgeSpawn(fromRight, baseVelocity, -1)
+	case 1:
+		pos, movement = edgeSpawn(fromLeft, baseVelocity, +1)
+	case 2:
 		pos, angle, movement = intelligentSpawn(baseVelocity, playerPos)
 		intelligent = true
 	}
@@ -44,8 +47,10 @@ func NewAlien(baseVelocity float64, playerPos engine.Vector) *Alien {
 		movement:      movement,
 		IsIntelligent: intelligent,
 	}
+
 	alien.Obj.SetPosition(pos.X, pos.Y)
 	alien.Obj.Tags().Set(engine.TagAlien)
+
 	return &alien
 }
 
