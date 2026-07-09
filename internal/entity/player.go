@@ -24,68 +24,100 @@ const (
 	numberOfShields      = 3
 	shieldDuration       = time.Second * 6
 	hyperspaceCooldown   = time.Second * 10
+	hyperspaceMaxTries   = 32
 	driftTime            = time.Second * 30
 )
 
+/* motion is the player's thrust and drift state */
+type motion struct {
+	acceleration float64
+	velocity     float64
+	driftAngle   float64
+	driftTimer   *engine.Timer
+}
+
+// weapon is the burst-fire state: up to maxShotsPerBurst quick shots,
+// then a longer pause.
+type weapon struct {
+	shootCooldown *engine.Timer
+	burstCooldown *engine.Timer
+	shotsFired    int
+}
+
+func newWeapon() weapon {
+	return weapon{
+		shootCooldown: engine.NewTimer(shootCooldown),
+		burstCooldown: engine.NewTimer(burstCooldown),
+	}
+}
+
+func (w *weapon) update() {
+	w.burstCooldown.Update()
+	w.shootCooldown.Update()
+}
+
+// fire consumes one shot, returning its number within the burst, or false
+// while cooling down or when the burst is spent.
+func (w *weapon) fire() (int, bool) {
+	if !w.burstCooldown.IsReady() || !w.shootCooldown.IsReady() {
+		return 0, false
+	}
+
+	w.shootCooldown.Reset()
+	w.shotsFired++
+
+	if w.shotsFired > maxShotsPerBurst {
+		w.burstCooldown.Reset()
+		w.shotsFired = 0
+		return 0, false
+	}
+
+	return w.shotsFired, true
+}
+
 type Player struct {
-	scene               Scene
-	currentAcceleration float64
-	shotsFired          int
-	Sprite              *ebiten.Image
-	Rotation            float64
-	Position            engine.Vector
-	playerVelocity      float64
-	PlayerObj           *resolv.Circle
-	shootCooldown       *engine.Timer
-	burstCooldown       *engine.Timer
-	IsShielded          bool
-	IsDying             bool
-	IsDead              bool
-	DyingTimer          *engine.Timer
-	DyingCounter        int
-	LivesRemaining      int
-	shieldTimer         *engine.Timer
-	ShieldsRemaining    int
-	hyperspaceTimer     *engine.Timer
-	driftAngle          float64
-	driftTimer          *engine.Timer
+	scene     Scene
+	Sprite    *ebiten.Image
+	Rotation  float64
+	Position  engine.Vector
+	PlayerObj *resolv.Circle
+
+	motion motion
+	weapon weapon
+
+	IsShielded       bool
+	shieldTimer      *engine.Timer
+	ShieldsRemaining int
+
+	IsDying        bool
+	IsDead         bool
+	DyingTimer     *engine.Timer
+	DyingCounter   int
+	LivesRemaining int
+
+	hyperspaceTimer *engine.Timer
 }
 
 func NewPlayer(scene Scene) *Player {
 	sprite := assets.PlayerSprite
 
 	/* center player on screen */
-	bounds := sprite.Bounds()
-	halfW := float64(bounds.Dx()) / 2
-	halfH := float64(bounds.Dy()) / 2
-
-	pos := engine.Vector{
-		X: engine.ScreenWidth/2 - halfW,
-		Y: engine.ScreenHeight/2 - halfH,
-	}
-
-	/* create collision object */
-	playerObj := engine.CircleFor(sprite, pos)
+	pos := engine.CenterSprite(engine.Vector{
+		X: engine.ScreenWidth / 2,
+		Y: engine.ScreenHeight / 2,
+	}, sprite)
 
 	p := &Player{
-		Sprite:           sprite,
 		scene:            scene,
+		Sprite:           sprite,
 		Position:         pos,
-		PlayerObj:        playerObj,
-		shootCooldown:    engine.NewTimer(shootCooldown),
-		burstCooldown:    engine.NewTimer(burstCooldown),
-		IsShielded:       false,
-		IsDying:          false,
-		IsDead:           false,
+		PlayerObj:        engine.CircleFor(sprite, pos),
+		weapon:           newWeapon(),
 		DyingTimer:       engine.NewTimer(dyingAnimationAmount),
-		DyingCounter:     0,
 		LivesRemaining:   numberOfLives,
 		ShieldsRemaining: numberOfShields,
-		hyperspaceTimer:  nil,
-		driftTimer:       nil,
 	}
 
-	p.PlayerObj.SetPosition(pos.X, pos.Y)
 	p.PlayerObj.Tags().Set(engine.TagPlayer)
 
 	return p
@@ -96,9 +128,18 @@ func (p *Player) Draw(screen *ebiten.Image) {
 }
 
 func (p *Player) Update() {
-	speed := rotationPerSecond / float64(ebiten.TPS())
-
 	p.isPlayerDead()
+
+	p.rotate()
+	p.move()
+
+	p.useShield()
+	p.fireLasers()
+	p.hyperspace()
+}
+
+func (p *Player) rotate() {
+	speed := rotationPerSecond / float64(ebiten.TPS())
 
 	if ebiten.IsKeyPressed(ebiten.KeyLeft) {
 		p.Rotation -= speed
@@ -107,36 +148,18 @@ func (p *Player) Update() {
 	if ebiten.IsKeyPressed(ebiten.KeyRight) {
 		p.Rotation += speed
 	}
+}
 
+/* move applies thrust, drift, and reverse, then syncs the collision object */
+func (p *Player) move() {
 	p.accelerate()
-
-	p.useShield()
-
 	p.isDoneAccelerating()
-
-	p.isDrifting()
-
-	p.isDriftFinished()
-
+	p.drift()
 	p.reverse()
-
 	p.isDoneReversing()
-
 	p.updateExhaustSprite()
 
 	p.PlayerObj.SetPosition(p.Position.X, p.Position.Y)
-
-	p.burstCooldown.Update()
-
-	p.shootCooldown.Update()
-
-	p.fireLasers()
-
-	p.hyperspace()
-
-	if p.hyperspaceTimer != nil {
-		p.hyperspaceTimer.Update()
-	}
 }
 
 func (p *Player) accelerate() {
@@ -144,23 +167,23 @@ func (p *Player) accelerate() {
 		return
 	}
 
-	p.driftTimer = nil
+	p.motion.driftTimer = nil
 
 	p.keepOnScreen()
 
-	if p.currentAcceleration < engine.MaxAcceleration {
-		p.currentAcceleration = p.playerVelocity + 4
+	if p.motion.acceleration < engine.MaxAcceleration {
+		p.motion.acceleration = p.motion.velocity + 4
 	}
 
-	if p.currentAcceleration >= 8 {
-		p.currentAcceleration = 8
+	if p.motion.acceleration >= engine.MaxAcceleration {
+		p.motion.acceleration = engine.MaxAcceleration
 	}
 
-	p.playerVelocity = p.currentAcceleration
+	p.motion.velocity = p.motion.acceleration
 
 	/* move in the direction we are pointing */
-	dx := math.Sin(p.Rotation) * p.currentAcceleration
-	dy := math.Cos(p.Rotation) * -p.currentAcceleration
+	dx := math.Sin(p.Rotation) * p.motion.acceleration
+	dy := math.Cos(p.Rotation) * -p.motion.acceleration
 
 	p.showExhaust()
 
@@ -173,49 +196,45 @@ func (p *Player) accelerate() {
 }
 
 func (p *Player) isDoneAccelerating() {
-	if inpututil.IsKeyJustReleased(ebiten.KeyUp) {
-		p.scene.PauseThrust()
-
-		/* figure out velocity */
-		if p.playerVelocity < p.currentAcceleration*10 {
-			p.playerVelocity = p.currentAcceleration*10 - 5.0
-		}
-
-		if p.playerVelocity < 0 {
-			p.playerVelocity = 0
-		}
-
-		p.currentAcceleration = 0
-
-		/* create a drift timer */
-		p.driftTimer = engine.NewTimer(driftTime)
-
-		/* save angle of rotation */
-		p.driftAngle = p.Rotation
-
+	if !inpututil.IsKeyJustReleased(ebiten.KeyUp) {
+		return
 	}
+
+	p.scene.PauseThrust()
+
+	/* figure out velocity */
+	if p.motion.velocity < p.motion.acceleration*10 {
+		p.motion.velocity = p.motion.acceleration*10 - 5.0
+	}
+
+	if p.motion.velocity < 0 {
+		p.motion.velocity = 0
+	}
+
+	p.motion.acceleration = 0
+
+	/* drift along the current heading until the timer runs out */
+	p.motion.driftTimer = engine.NewTimer(driftTime)
+	p.motion.driftAngle = p.Rotation
 }
 
-func (p *Player) isDrifting() {
-	if p.driftTimer == nil {
+func (p *Player) drift() {
+	if p.motion.driftTimer == nil {
 		return
 	}
 
 	p.keepOnScreen()
-	p.driftTimer.Update()
+	p.motion.driftTimer.Update()
 
-	decelerationSpeed := p.playerVelocity / float64(ebiten.TPS()) * 4
+	decelerationSpeed := p.motion.velocity / float64(ebiten.TPS()) * 4
 
-	p.Position.X += math.Sin(p.driftAngle) * decelerationSpeed
-	p.Position.Y += math.Cos(p.driftAngle) * -decelerationSpeed
+	p.Position.X += math.Sin(p.motion.driftAngle) * decelerationSpeed
+	p.Position.Y += math.Cos(p.motion.driftAngle) * -decelerationSpeed
 	p.PlayerObj.SetPosition(p.Position.X, p.Position.Y)
 
-}
-
-func (p *Player) isDriftFinished() {
-	if p.driftTimer != nil && p.driftTimer.IsReady() {
-		p.driftTimer = nil
-		p.playerVelocity = 0
+	if p.motion.driftTimer.IsReady() {
+		p.motion.driftTimer = nil
+		p.motion.velocity = 0
 	}
 }
 
@@ -224,7 +243,7 @@ func (p *Player) reverse() {
 		return
 	}
 
-	p.driftTimer = nil
+	p.motion.driftTimer = nil
 
 	p.keepOnScreen()
 	dx := math.Sin(p.Rotation) * -3
@@ -254,54 +273,59 @@ func (p *Player) updateExhaustSprite() {
 }
 
 func (p *Player) fireLasers() {
-	if !p.burstCooldown.IsReady() {
+	p.weapon.update()
+
+	if !ebiten.IsKeyPressed(ebiten.KeySpace) {
 		return
 	}
 
-	if p.shootCooldown.IsReady() && ebiten.IsKeyPressed(ebiten.KeySpace) {
-		p.shootCooldown.Reset()
-		p.shotsFired++
-		if p.shotsFired <= maxShotsPerBurst {
-			bounds := p.Sprite.Bounds()
-			halfW := float64(bounds.Dx()) / 2
-			halfH := float64(bounds.Dy()) / 2
-
-			spawnPos := engine.Vector{
-				X: p.Position.X + halfW + math.Sin(p.Rotation)*laserSpawnOffset,
-				Y: p.Position.Y + halfH + math.Cos(p.Rotation)*-laserSpawnOffset,
-			}
-
-			p.scene.SpawnLaser(spawnPos, p.Rotation)
-			p.scene.PlayLaserSound(p.shotsFired)
-		} else {
-			p.burstCooldown.Reset()
-			p.shotsFired = 0
-		}
+	shot, ok := p.weapon.fire()
+	if !ok {
+		return
 	}
+
+	p.scene.SpawnLaser(p.spawnPoint(laserSpawnOffset), p.Rotation)
+	p.scene.PlayLaserSound(shot)
 }
 
 func (p *Player) hyperspace() {
-	if ebiten.IsKeyPressed(ebiten.KeyH) && p.HyperspaceReady() {
-		var randX, randY int
-
-		for {
-			randX = rand.Intn(engine.ScreenWidth)
-			randY = rand.Intn(engine.ScreenHeight)
-			collision := engine.CheckCollision(p.PlayerObj)
-			if !collision {
-				break
-			}
-		}
-
-		p.Position.X = float64(randX)
-		p.Position.Y = float64(randY)
-
-		if p.hyperspaceTimer == nil {
-			p.hyperspaceTimer = engine.NewTimer(hyperspaceCooldown)
-		}
-
-		p.hyperspaceTimer.Reset()
+	if p.hyperspaceTimer != nil {
+		p.hyperspaceTimer.Update()
 	}
+
+	if !ebiten.IsKeyPressed(ebiten.KeyH) || !p.HyperspaceReady() {
+		return
+	}
+
+	if !p.jumpToSafeSpot() {
+		return
+	}
+
+	if p.hyperspaceTimer == nil {
+		p.hyperspaceTimer = engine.NewTimer(hyperspaceCooldown)
+	}
+
+	p.hyperspaceTimer.Reset()
+}
+
+// jumpToSafeSpot teleports to a random collision-free position, giving up
+// after hyperspaceMaxTries so a crowded screen cannot hang the game loop.
+func (p *Player) jumpToSafeSpot() bool {
+	for range hyperspaceMaxTries {
+		x := float64(rand.Intn(engine.ScreenWidth))
+		y := float64(rand.Intn(engine.ScreenHeight))
+
+		p.PlayerObj.SetPosition(x, y)
+
+		if !engine.CheckCollision(p.PlayerObj) {
+			p.Position = engine.Vector{X: x, Y: y}
+			return true
+		}
+	}
+
+	/* no safe spot found; stay put */
+	p.PlayerObj.SetPosition(p.Position.X, p.Position.Y)
+	return false
 }
 
 /* HyperspaceReady reports whether hyperspace is off cooldown. */
@@ -320,19 +344,19 @@ func (p *Player) keepOnScreen() {
 	p.PlayerObj.SetPosition(p.Position.X, p.Position.Y)
 }
 
-func (p *Player) showExhaust() {
-	/* show exhaust */
+// spawnPoint returns the point `distance` ahead of the sprite center along
+// the player's heading; negative distances land behind the ship.
+func (p *Player) spawnPoint(distance float64) engine.Vector {
 	bounds := p.Sprite.Bounds()
-	halfW := float64(bounds.Dx()) / 2
-	halfH := float64(bounds.Dy()) / 2
 
-	/* where to spawn exhaust */
-	exhaustSpawnPosition := engine.Vector{
-		X: p.Position.X + halfW + math.Sin(p.Rotation)*exhaustSpawnOffset,
-		Y: p.Position.Y + halfH + math.Cos(p.Rotation)*-exhaustSpawnOffset,
+	return engine.Vector{
+		X: p.Position.X + float64(bounds.Dx())/2 + math.Sin(p.Rotation)*distance,
+		Y: p.Position.Y + float64(bounds.Dy())/2 - math.Cos(p.Rotation)*distance,
 	}
+}
 
-	p.scene.SetExhaust(NewExhaust(exhaustSpawnPosition, p.Rotation+180.0*math.Pi/180.0))
+func (p *Player) showExhaust() {
+	p.scene.SetExhaust(NewExhaust(p.spawnPoint(exhaustSpawnOffset), p.Rotation+math.Pi))
 }
 
 func (p *Player) useShield() {
@@ -354,5 +378,4 @@ func (p *Player) useShield() {
 		p.IsShielded = false
 		p.scene.ClearShield()
 	}
-
 }
