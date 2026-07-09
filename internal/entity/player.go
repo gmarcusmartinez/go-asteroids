@@ -44,12 +44,9 @@ type Player struct {
 	DyingTimer          *engine.Timer
 	DyingCounter        int
 	LivesRemaining      int
-	LifeIndicators      []*Indicator
 	shieldTimer         *engine.Timer
 	ShieldsRemaining    int
-	ShieldIndicators    []*Indicator
-	HyperspaceIndicator *Indicator
-	HyperspaceTimer     *engine.Timer
+	hyperspaceTimer     *engine.Timer
 	driftAngle          float64
 	driftTimer          *engine.Timer
 }
@@ -70,51 +67,22 @@ func NewPlayer(scene Scene) *Player {
 	/* create collision object */
 	playerObj := engine.CircleFor(sprite, pos)
 
-	/* setup life indicators*/
-	var lifeIndicators []*Indicator
-	var xPosition = 20.0
-
-	for range numberOfLives {
-		li := NewLifeIndicator(engine.Vector{
-			X: xPosition,
-			Y: 20,
-		})
-		lifeIndicators = append(lifeIndicators, li)
-		xPosition += 50.0
-	}
-
-	/* setup shield indicators*/
-	var shieldIndicators []*Indicator
-	xPosition = 45.0
-
-	for range numberOfShields {
-		si := NewShieldIndicator(engine.Vector{
-			X: xPosition,
-			Y: 60,
-		})
-		shieldIndicators = append(shieldIndicators, si)
-		xPosition += 50.0
-	}
-
 	p := &Player{
-		Sprite:              sprite,
-		scene:               scene,
-		Position:            pos,
-		PlayerObj:           playerObj,
-		shootCooldown:       engine.NewTimer(shootCooldown),
-		burstCooldown:       engine.NewTimer(burstCooldown),
-		IsShielded:          false,
-		IsDying:             false,
-		IsDead:              false,
-		DyingTimer:          engine.NewTimer(dyingAnimationAmount),
-		DyingCounter:        0,
-		LivesRemaining:      numberOfLives,
-		LifeIndicators:      lifeIndicators,
-		ShieldsRemaining:    numberOfShields,
-		ShieldIndicators:    shieldIndicators,
-		HyperspaceIndicator: NewHyperspaceIndicator(engine.Vector{X: 37.0, Y: 95.0}),
-		HyperspaceTimer:     nil,
-		driftTimer:          nil,
+		Sprite:           sprite,
+		scene:            scene,
+		Position:         pos,
+		PlayerObj:        playerObj,
+		shootCooldown:    engine.NewTimer(shootCooldown),
+		burstCooldown:    engine.NewTimer(burstCooldown),
+		IsShielded:       false,
+		IsDying:          false,
+		IsDead:           false,
+		DyingTimer:       engine.NewTimer(dyingAnimationAmount),
+		DyingCounter:     0,
+		LivesRemaining:   numberOfLives,
+		ShieldsRemaining: numberOfShields,
+		hyperspaceTimer:  nil,
+		driftTimer:       nil,
 	}
 
 	p.PlayerObj.SetPosition(pos.X, pos.Y)
@@ -166,8 +134,8 @@ func (p *Player) Update() {
 
 	p.hyperspace()
 
-	if p.HyperspaceTimer != nil {
-		p.HyperspaceTimer.Update()
+	if p.hyperspaceTimer != nil {
+		p.hyperspaceTimer.Update()
 	}
 }
 
@@ -313,7 +281,7 @@ func (p *Player) fireLasers() {
 }
 
 func (p *Player) hyperspace() {
-	if ebiten.IsKeyPressed(ebiten.KeyH) && (p.HyperspaceTimer == nil || p.HyperspaceTimer.IsReady()) {
+	if ebiten.IsKeyPressed(ebiten.KeyH) && p.HyperspaceReady() {
 		var randX, randY int
 
 		for {
@@ -328,12 +296,17 @@ func (p *Player) hyperspace() {
 		p.Position.X = float64(randX)
 		p.Position.Y = float64(randY)
 
-		if p.HyperspaceTimer == nil {
-			p.HyperspaceTimer = engine.NewTimer(hyperspaceCooldown)
+		if p.hyperspaceTimer == nil {
+			p.hyperspaceTimer = engine.NewTimer(hyperspaceCooldown)
 		}
 
-		p.HyperspaceTimer.Reset()
+		p.hyperspaceTimer.Reset()
 	}
+}
+
+/* HyperspaceReady reports whether hyperspace is off cooldown. */
+func (p *Player) HyperspaceReady() bool {
+	return p.hyperspaceTimer == nil || p.hyperspaceTimer.IsReady()
 }
 
 func (p *Player) isPlayerDead() {
@@ -370,7 +343,6 @@ func (p *Player) useShield() {
 		p.shieldTimer = engine.NewTimer(shieldDuration)
 		p.scene.SetShield(NewShield(p))
 		p.ShieldsRemaining--
-		p.ShieldIndicators = p.ShieldIndicators[:len(p.ShieldIndicators)-1]
 	}
 
 	if p.shieldTimer != nil && p.IsShielded {

@@ -302,20 +302,6 @@ func (g *GameScene) Draw(screen *ebiten.Image) {
 		l.Draw(screen)
 	}
 
-	/* draw life indicators */
-	if len(g.player.LifeIndicators) > 0 {
-		for _, li := range g.player.LifeIndicators {
-			li.Draw(screen)
-		}
-	}
-
-	/* draw shield indicators */
-	if len(g.player.ShieldIndicators) > 0 {
-		for _, si := range g.player.ShieldIndicators {
-			si.Draw(screen)
-		}
-	}
-
 	/* draw aliens  */
 	for _, a := range g.aliens {
 		a.Draw(screen)
@@ -326,10 +312,8 @@ func (g *GameScene) Draw(screen *ebiten.Image) {
 		al.Draw(screen)
 	}
 
-	/* draw hyperspace indicator */
-	if g.player.HyperspaceTimer == nil || g.player.HyperspaceTimer.IsReady() {
-		g.player.HyperspaceIndicator.Draw(screen)
-	}
+	/* draw life, shield, and hyperspace indicators */
+	drawHUD(screen, g.player)
 
 	/* draw score */
 	textToDraw := fmt.Sprintf("%06d", g.score)
@@ -621,21 +605,17 @@ func (g *GameScene) isPlayerDead(state *State) {
 			stars:       entity.GenerateStars(numberOfStars),
 		})
 	} else {
-		/* decrement lives remaining */
+		/* keep score, lives, shields, and stars across the reset */
 		score := g.score
 		livesRemaining := g.player.LivesRemaining
-		lifeSlice := g.player.LifeIndicators[:len(g.player.LifeIndicators)-1]
 		stars := g.stars
 		shieldsRemaining := g.player.ShieldsRemaining
-		shieldIndicatorSlice := g.player.ShieldIndicators
 
 		g.Reset()
 		g.player.LivesRemaining = livesRemaining
 		g.score = score
-		g.player.LifeIndicators = lifeSlice
 		g.stars = stars
 		g.player.ShieldsRemaining = shieldsRemaining
-		g.player.ShieldIndicators = shieldIndicatorSlice
 	}
 
 }
@@ -648,14 +628,6 @@ func (g *GameScene) isLevelComplete(state *State) {
 		if g.currentLevel%5 == 0 {
 			if g.player.LivesRemaining < 6 {
 				g.player.LivesRemaining++
-
-				x := float64(20 + len(g.player.LifeIndicators)*50)
-				y := 20.0
-
-				g.player.LifeIndicators = append(g.player.LifeIndicators, entity.NewLifeIndicator(engine.Vector{
-					X: x,
-					Y: y,
-				}))
 			}
 		}
 
